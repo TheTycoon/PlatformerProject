@@ -30,9 +30,13 @@ class Game:
             if tile_object.name == 'Player':
                 self.player = player.Player(self, tile_object.x, tile_object.y)
             if tile_object.name == 'Wall':
-                sprites.Wall(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, False)
+                sprites.Wall(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height)
             if tile_object.name == 'Bounce':
-                sprites.Wall(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, True)
+                sprites.BounceBlock(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height)
+            if tile_object.name == 'Ice':
+                sprites.IceBlock(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height)
+            if tile_object.name == 'Death':
+                sprites.DeathBlock(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height)
 
         self.camera = tilemap.Camera(self.map.width, self.map.height)
 
@@ -53,7 +57,7 @@ class Game:
         self.map_folder = path.join(self.game_folder, 'maps')
 
         # load Tiled map stuff
-        self.map = tilemap.Map(path.join(self.map_folder, 'map2.tmx'))
+        self.map = tilemap.Map(path.join(self.map_folder, 'testmap.tmx'))
         self.map_img = self.map.make_map()
         self.map_rect = self.map_img.get_rect()
 
@@ -61,6 +65,8 @@ class Game:
         # Game Loop - Update
         self.all_sprites.update()
         self.camera.update(self.player)
+
+        print(self.player.velocity)
 
     def events(self):
         # Game Loop - Events

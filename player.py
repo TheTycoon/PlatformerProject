@@ -35,17 +35,30 @@ class Player(pygame.sprite.Sprite):
         # If you collide with a wall, move out based on velocity
         for wall in self.game.walls:
             if self.rect.colliderect(wall.rect):
+
+                # check for a death block first / add more here
+                # animation for death, message, game over screen, restart level, etc
+                if wall.death is True:
+                    self.kill()
+                    print("You Died!")
+
+
                 if dx > 0:  # Moving right; Hit the left side of the wall
                     self.rect.right = wall.rect.left
                 if dx < 0:  # Moving left; Hit the right side of the wall
                     self.rect.left = wall.rect.right
-                if dy > 0:  # Moving down; Hit the top side of the wall
+
+                # Moving down and landing on top of a wall has extra behaviors
+                # Resets the ability to double jump
+                # Checks if it is a bounce block
+                if dy > 0:                                  # Moving down; Hit the top side of the wall
                     self.rect.bottom = wall.rect.top
                     self.double_jumping = False
-                    if wall.bounce is True:
-                        self.velocity.y = - settings.BOUNCE_MAGNITUDE
+                    if wall.bounce > 0:
+                        self.velocity.y = - wall.bounce
                     else:
                         self.velocity.y = 0
+
                 if dy < 0:  # Moving up; Hit the bottom side of the wall, lose velocity
                     self.rect.top = wall.rect.bottom
                     self.velocity.y = 0
@@ -63,8 +76,8 @@ class Player(pygame.sprite.Sprite):
 
     def jump_cut(self):
         if self.airborne:
-            if self.velocity.y < -3:
-                self.velocity.y = -3
+            if self.velocity.y < -1:
+                self.velocity.y = -1
 
     def check_airborne(self):
         self.rect.y += 1
@@ -74,6 +87,15 @@ class Player(pygame.sprite.Sprite):
             return False
         else:
             return True
+
+    def get_block_friction(self):
+        self.rect.y += 1
+        hits = pygame.sprite.spritecollide(self, self.game.walls, False)
+        self.rect.y -= 1
+        if hits:
+            return hits[0].friction
+        else:
+            return None
 
     def update(self):
         # This first airborne check resets the flag and initial acceleration
@@ -101,7 +123,8 @@ class Player(pygame.sprite.Sprite):
         if self.airborne:
             self.acceleration *= settings.DRAG
         else:
-            self.acceleration.x += self.velocity.x * settings.FRICTION
+            friction = self.get_block_friction()
+            self.acceleration.x += self.velocity.x * friction
 
         # equations of motion
         self.velocity += self.acceleration
