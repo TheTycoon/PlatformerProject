@@ -1,6 +1,5 @@
 import pygame
 import settings
-import math
 
 
 class Player(pygame.sprite.Sprite):
@@ -14,9 +13,12 @@ class Player(pygame.sprite.Sprite):
         self.x = x
         self.y = y
         self.rect.topleft = (self.x, self.y)
+        self.position = pygame.math.Vector2(self.x, self.y)
         self.velocity = pygame.math.Vector2(0, 0)
-        self.jumping = False
+        self.acceleration = pygame.math.Vector2(0, 0)
 
+        self.airborne = False
+        self.double_jumping = False
 
     def move(self, dx, dy):
         # Move each axis separately. Note that this checks for collisions both times.
@@ -31,68 +33,91 @@ class Player(pygame.sprite.Sprite):
         self.rect.y += dy
 
         # If you collide with a wall, move out based on velocity
-        collide = False
         for wall in self.game.walls:
             if self.rect.colliderect(wall.rect):
-                collide = True
                 if dx > 0:  # Moving right; Hit the left side of the wall
                     self.rect.right = wall.rect.left
                 if dx < 0:  # Moving left; Hit the right side of the wall
                     self.rect.left = wall.rect.right
-                if dy > 0:  # Moving down; Hit the top side of the wall, lose velocity if just landed
+                if dy > 0:  # Moving down; Hit the top side of the wall
                     self.rect.bottom = wall.rect.top
-                    if self.jumping:
+                    self.double_jumping = False
+                    if wall.bounce is True:
+                        self.velocity.y = - settings.BOUNCE_MAGNITUDE
+                    else:
                         self.velocity.y = 0
-                        self.jumping = False
                 if dy < 0:  # Moving up; Hit the bottom side of the wall, lose velocity
                     self.rect.top = wall.rect.bottom
                     self.velocity.y = 0
-        if not collide:
-            self.jumping = True
-
-    def apply_force(self, force_direction, force_magnitude):
-        x = math.sin(self.velocity.x) * self.velocity.y + math.sin(force_direction) * force_magnitude
-        y = math.cos(self.velocity.x) * self.velocity.y + math.cos(force_direction) * force_magnitude
-        self.velocity.x = 0.5 * math.pi - math.atan2(y, x)
-        self.velocity.y = math.hypot(x, y)
 
     def jump(self):
         # jump only if standing on a platform
-        self.rect.y += 2
-        hits = pygame.sprite.spritecollide(self, self.game.walls, False)
-        self.rect.y -= 2
-        if hits and not self.jumping:
-            self.apply_force(settings.UP, settings.PLAYER_JUMP)
-            self.jumping = True
+        if not self.check_airborne() and not self.airborne:
+            self.airborne = True
+            self.velocity.y = -settings.PLAYER_JUMP
+
+    def double_jump(self):
+        if self.check_airborne() and not self.double_jumping:
+            self.double_jumping = True
+            self.velocity.y = -settings.PLAYER_JUMP
 
     def jump_cut(self):
-        if self.jumping:
-            self.apply_force(settings.DOWN, 7 * settings.GRAVITY_MAGNITUDE)
+        if self.airborne:
+            if self.velocity.y < -3:
+                self.velocity.y = -3
+
+    def check_airborne(self):
+        self.rect.y += 1
+        hits = pygame.sprite.spritecollide(self, self.game.walls, False)
+        self.rect.y -= 1
+        if hits:
+            return False
+        else:
+            return True
 
     def update(self):
-        # apply player movement
-        if self.jumping:
+        # This first airborne check resets the flag and initial acceleration
+        # for the current frame
+        if self.check_airborne():
+            self.airborne = True
+            self.acceleration = pygame.math.Vector2(0, settings.GRAVITY_MAGNITUDE)
+        else:
+            self.airborne = False
+            self.acceleration = pygame.math.Vector2(0, 0)
+
+        # Implement any other real-time player movement here
+        # airborne controls are diminished
+        if self.airborne:
             acceleration = 0.2 * settings.PLAYER_ACCELERATION
         else:
             acceleration = settings.PLAYER_ACCELERATION
-
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
-            self.apply_force(settings.LEFT, acceleration)
+            self.acceleration.x = -acceleration
         if keys[pygame.K_RIGHT]:
-            self.apply_force(settings.RIGHT, acceleration)
+            self.acceleration.x = acceleration
 
-        # apply gravity
-        self.apply_force(settings.DOWN, settings.GRAVITY_MAGNITUDE)
+        # apply drag if airborne, friction only to x direction if walking
+        if self.airborne:
+            self.acceleration *= settings.DRAG
+        else:
+            self.acceleration.x += self.velocity.x * settings.FRICTION
 
-        # make sure player isn't moving too fast
-        if self.velocity.y > settings.MAX_VELOCITY:
-            self.velocity.y = settings.MAX_VELOCITY
+        # equations of motion
+        self.velocity += self.acceleration
+        if abs(self.velocity.x) < 0.1:
+            self.velocity.x = 0
+        if self.velocity.y > settings.MAX_FALL_VELOCITY:
+            self.velocity.y = settings.MAX_FALL_VELOCITY
+        elif self.velocity.y < - settings.MAX_JUMP_VELOCITY:
+            self.velocity.y = - settings.MAX_JUMP_VELOCITY
 
-        # calculate change in position to check for collisions while moving
-        dx = math.sin(self.velocity.x) * self.velocity.y
-        dy = math.cos(self.velocity.x) * self.velocity.y
+        new_position = self.position + self.velocity + 0.5 * self.acceleration
+        dx = new_position.x - self.position.x
+        dy = new_position.y - self.position.y
+
         self.move(dx, dy)
+
 
 
 

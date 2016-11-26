@@ -30,7 +30,11 @@ class Game:
             if tile_object.name == 'Player':
                 self.player = player.Player(self, tile_object.x, tile_object.y)
             if tile_object.name == 'Wall':
-                sprites.Wall(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height)
+                sprites.Wall(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, False)
+            if tile_object.name == 'Bounce':
+                sprites.Wall(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, True)
+
+        self.camera = tilemap.Camera(self.map.width, self.map.height)
 
     def run(self):
         # Game Loop
@@ -49,13 +53,14 @@ class Game:
         self.map_folder = path.join(self.game_folder, 'maps')
 
         # load Tiled map stuff
-        self.map = tilemap.Map(path.join(self.map_folder, 'map1.tmx'))
+        self.map = tilemap.Map(path.join(self.map_folder, 'map2.tmx'))
         self.map_img = self.map.make_map()
         self.map_rect = self.map_img.get_rect()
 
     def update(self):
         # Game Loop - Update
         self.all_sprites.update()
+        self.camera.update(self.player)
 
     def events(self):
         # Game Loop - Events
@@ -69,20 +74,23 @@ class Game:
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    self.player.jump()
+                    if not self.player.airborne:
+                        self.player.jump()
+                    if self.player.airborne and not self.player.double_jumping:
+                        self.player.double_jump()
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_SPACE:
                     self.player.jump_cut()
-                if not self.player.jumping and (event.key == pygame.K_RIGHT or event.key == pygame.K_LEFT):
-                    self.player.velocity.y = 0
 
     def draw(self):
         # show FPS
         pygame.display.set_caption("{:.2f}".format(self.clock.get_fps()))
 
         # DRAW STUFF
-        self.screen.blit(self.map_img, self.map_rect)
-        self.all_sprites.draw(self.screen)
+        self.screen.blit(self.map_img, self.camera.apply_rect(self.map_rect))
+
+        for sprite in self.all_sprites:
+            self.screen.blit(sprite.image, self.camera.apply(sprite))
 
         # display frame
         pygame.display.flip()

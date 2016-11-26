@@ -20,15 +20,13 @@ FPS = 60
 TITLE = 'Platformer Project'
 TILESIZE = 32
 
+#PLAYER SETTINGS                        # BEST COMBO OF VALUES FOUND SO FAR
+PLAYER_ACCELERATION = 2.5               # 2.5
+GRAVITY_MAGNITUDE = 5                   # 5
+BOUNCE_MAGNITUDE = 60                   # 60
+FRICTION = -0.4                         # -0.4
+DRAG = 0.5                              # 0.5
+MAX_FALL_VELOCITY = 20                  # 20
+MAX_JUMP_VELOCITY = 100                 # 100
+PLAYER_JUMP = 20                        # 20
 
-PLAYER_ACCELERATION = 2
-GRAVITY_MAGNITUDE = 1
-MAX_VELOCITY = 15
-PLAYER_JUMP = 60
-
-
-# Directions for use in velocity/acceleration vectors
-LEFT = 3 * math.pi / 2
-RIGHT = math.pi / 2
-UP = math.pi
-DOWN = 0
