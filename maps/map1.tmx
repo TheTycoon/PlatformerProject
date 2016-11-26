@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="20" height="20" tilewidth="32" tileheight="32" nextobjectid="20">
+ <tileset firstgid="1" name="2x4 Sheet1" tilewidth="32" tileheight="32" spacing="10" tilecount="8" columns="4">
+  <image source="../tilesets/2x4 Sheet1.png" width="158" height="74"/>
+ </tileset>
+ <objectgroup name="Object Layer 1" opacity="0.94">
+  <object id="1" name="Wall" x="0" y="0" width="640" height="32"/>
+  <object id="2" name="Wall" x="0" y="608" width="640" height="32"/>
+  <object id="3" name="Wall" x="0" y="32" width="32" height="576"/>
+  <object id="4" name="Wall" x="608" y="32" width="32" height="576"/>
+  <object id="5" name="Player" x="32" y="576" width="32" height="32"/>
+  <object id="14" name="Wall" x="96" y="544" width="32" height="32"/>
+  <object id="16" name="Wall" x="192" y="512" width="32" height="32"/>
+  <object id="17" name="Wall" x="320" y="480" width="32" height="32"/>
+  <object id="18" name="Wall" x="416" y="416" width="32" height="32"/>
+  <object id="19" name="Wall" x="512" y="512" width="32" height="32"/>
+ </objectgroup>
+ <layer name="Tile Layer 1" width="20" height="20">
+  <data encoding="csv">
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,1,
+1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+</data>
+ </layer>
+</map>
