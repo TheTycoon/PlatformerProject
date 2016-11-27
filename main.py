@@ -8,10 +8,10 @@ import tilemap
 
 class Game:
     def __init__(self):
-        # initialize game window, sound, etc
         pygame.init()
         self.screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
         self.clock = pygame.time.Clock()
+
         joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
         if joysticks:
             self.joystick = joysticks[0]
@@ -19,9 +19,6 @@ class Game:
             self.joystick_enabled = True
         else:
             self.joystick_enabled = False
-
-        # show title
-        #pygame.display.set_caption(settings.TITLE)
 
         self.running = True
         self.load_data()
