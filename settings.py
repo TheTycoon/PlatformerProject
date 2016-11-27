@@ -30,7 +30,8 @@ DRAG = 0.5                              #   0.5
 MAX_FALL_VELOCITY = 20                  #  20.0
 MAX_JUMP_VELOCITY = 100                 # 100.0
 PLAYER_JUMP = 20                        #  20.0
-ENERGY_REGEN = 0.5
+ENERGY_REGEN = 0.05
+AIR_DASH_MAGNITUDE = 100
 
 
 

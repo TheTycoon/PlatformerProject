@@ -7,7 +7,7 @@ class Player(pygame.sprite.Sprite):
         self.groups = game.all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pygame.Surface((32, 32))
+        self.image = pygame.Surface((32, 64))
         self.rect = self.image.get_rect()
         self.image.fill(settings.BLUE, self.rect)
         self.rect.topleft = (x, y)
@@ -17,17 +17,19 @@ class Player(pygame.sprite.Sprite):
 
         # ability flags
         self.can_double_jump = False
-        self.can_wall_grab = False
-        self.can_dash = True
-        self.can_air_dash = False
+        self.can_wall_grab = True
+        self.can_sprint = True
+        self.can_air_dash = True
 
         # movement flags
         self.double_jumping = False
         self.wall_grabbing = False
+        self.sprinting = False
+        self.air_dashing = False
 
         # attributes of the player
-        self.max_energy = 100
-        self.current_energy = 100
+        self.max_energy = 10
+        self.current_energy = 10
         self.energy_regen = settings.ENERGY_REGEN
 
     def move(self, dx, dy):
@@ -72,10 +74,12 @@ class Player(pygame.sprite.Sprite):
                 # Moving down; Hit the top side of the wall
                 # Extra Behaviors:
                 # - Resets the ability to double jump
+                # - Resets the ability to air dash
                 # - Applies bounce if applicable
                 if dy > 0:
                     self.rect.bottom = block.rect.top
                     self.double_jumping = False
+                    self.air_dashing = False
                     if block.bounce > 0:
                         self.velocity.y *= -1
                         self.velocity.y += -block.bounce
@@ -138,8 +142,8 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         self.begin_frame()
         self.joystick_movement()
-        if self.can_dash and not self.check_airborne():
-            self.check_dash()
+        if self.can_sprint and not self.check_airborne():
+            self.joystick_sprint()
         self.apply_resistance()
         self.calculate_velocity()
 
@@ -148,12 +152,8 @@ class Player(pygame.sprite.Sprite):
         dy = new_position.y - self.position.y
 
         # Final movement
-        if self.can_wall_grab:
-            if self.joystick_wall_grab():
-                self.move(0, 0)
-            else:
-                self.move(dx, dy)
-        else:
+
+        if not self.joystick_wall_grab() and not self.joystick_air_dash():
             self.move(dx, dy)
 
     def begin_frame(self):
@@ -181,8 +181,8 @@ class Player(pygame.sprite.Sprite):
         if self.game.joystick.get_axis(0) > 0.85:
             self.acceleration.x = acceleration
 
-    def check_dash(self):
-        if self.game.joystick.get_axis(settings.JOYSTICK['RightTrigger']) > 0.85:
+    def joystick_sprint(self):
+        if self.game.joystick.get_button(settings.JOYSTICK['X']):
             if self.current_energy >= 1:
                 self.acceleration.x *= 3
                 self.current_energy -= 1
@@ -191,15 +191,36 @@ class Player(pygame.sprite.Sprite):
                 return True
         return False
 
-
-
     def joystick_wall_grab(self):
-        if self.game.joystick.get_axis(settings.JOYSTICK['LeftTrigger']) > 0.85 and self.check_wall():
+        if self.can_wall_grab and self.game.joystick.get_button(settings.JOYSTICK['B']) and self.check_wall():
             if self.current_energy >= 1:
-                self.move(0, 0)
                 self.acceleration = pygame.math.Vector2(0, 0)
                 self.velocity = pygame.math.Vector2(0, 0)
                 self.current_energy -= 1
+                self.move(0, 0)
+                if self.current_energy < 0:
+                    self.current_energy = 0
+                return True
+        return False
+
+
+    # this needs to cost a lot of energy or be reworked a bit
+    def joystick_air_dash(self):
+        if self.can_air_dash and not self.air_dashing \
+                and self.game.joystick.get_axis(settings.JOYSTICK['RightTrigger']) > 0.85 and self.check_airborne():
+            if self.current_energy >= 10:
+                self.current_energy -= 10
+                self.move(settings.AIR_DASH_MAGNITUDE, 0)
+                self.air_dashing = True
+                if self.current_energy < 0:
+                    self.current_energy = 0
+                return True
+        if self.can_air_dash and not self.air_dashing \
+                and self.game.joystick.get_axis(settings.JOYSTICK['LeftTrigger']) > 0.85 and self.check_airborne():
+            if self.current_energy >= 10:
+                self.current_energy -= 10
+                self.move(- settings.AIR_DASH_MAGNITUDE, 0)
+                self.air_dashing = True
                 if self.current_energy < 0:
                     self.current_energy = 0
                 return True
