@@ -30,7 +30,7 @@ class Game:
         self.interactables = pygame.sprite.Group()
         self.abilities = pygame.sprite.Group()
 
-        self.levels = ['testmap.tmx', 'level1.tmx', 'level2.tmx']
+        self.levels = ['testmap.tmx', 'level1.tmx', 'level2.tmx', 'level3.tmx', 'map5.tmx']
 
         # Load 1st Level
         self.level_number = 1
@@ -72,8 +72,8 @@ class Game:
             if tile_object.type == 'Interactable':
                 sprites.Interactable(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.name)
 
-            if tile_object.type == 'AbilityBlock':
-                sprites.AbilityBlock(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.name)
+            if tile_object.type == 'Ability':
+                sprites.Ability(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.name)
         self.camera = tilemap.Camera(self.map.width, self.map.height)
 
     def next_level(self):

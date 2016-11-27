@@ -27,7 +27,7 @@ class Interactable(pygame.sprite.Sprite):
         self.name = name
 
 
-class AbilityBlock(pygame.sprite.Sprite):
+class Ability(pygame.sprite.Sprite):
     def __init__(self, game, x, y, w, h, name):
         self.groups = game.all_sprites, game.abilities
         pygame.sprite.Sprite.__init__(self, self.groups)

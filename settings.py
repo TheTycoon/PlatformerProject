@@ -24,7 +24,7 @@ TILESIZE = 32
 #PLAYER SETTINGS                        # BEST COMBO OF VALUES FOUND SO FAR
 PLAYER_ACCELERATION = 2.5               #   2.5
 GRAVITY_MAGNITUDE = 5                   #   5.0
-BOUNCE_MAGNITUDE = 40                   #  40.0
+BOUNCE_MAGNITUDE = 20                   #  20.0
 WALL_FRICTION = -0.4                    # - 0.4
 DRAG = 0.5                              #   0.5
 MAX_FALL_VELOCITY = 20                  #  20.0

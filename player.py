@@ -77,7 +77,8 @@ class Player(pygame.sprite.Sprite):
                     self.rect.bottom = block.rect.top
                     self.double_jumping = False
                     if block.bounce > 0:
-                        self.velocity.y = - block.bounce
+                        self.velocity.y *= -1
+                        self.velocity.y += -block.bounce
                     else:
                         self.velocity.y = 0
                 # Moving up; Hit the bottom side of the wall, lose velocity
