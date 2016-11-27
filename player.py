@@ -18,10 +18,17 @@ class Player(pygame.sprite.Sprite):
         # ability flags
         self.can_double_jump = False
         self.can_wall_grab = False
+        self.can_dash = False
+        self.can_air_dash = False
 
         # movement flags
         self.double_jumping = False
         self.wall_grabbing = False
+
+        # attributes of the player
+        self.max_energy = 100
+        self.current_energy = 100
+        self.energy_regen = settings.ENERGY_REGEN
 
     def move(self, dx, dy):
         # Move each axis separately. Note that this checks for collisions both times.
@@ -56,37 +63,33 @@ class Player(pygame.sprite.Sprite):
                     self.kill()
                     print("You Died!")
 
-                # adding in wall grapple stuff
+
                 if dx > 0:  # Moving right; Hit the left side of the wall
                     self.rect.right = block.rect.left
 
                 if dx < 0:  # Moving left; Hit the right side of the wall
                     self.rect.left = block.rect.right
 
-
-                # Moving down and landing on top of a wall has extra behaviors:
+                # Moving down; Hit the top side of the wall
+                # Extra Behaviors:
                 # - Resets the ability to double jump
-                # - Applys bounce if applicable
-                if dy > 0:                                  # Moving down; Hit the top side of the wall
+                # - Applies bounce if applicable
+                if dy > 0:
                     self.rect.bottom = block.rect.top
                     self.double_jumping = False
                     if block.bounce > 0:
                         self.velocity.y = - block.bounce
                     else:
                         self.velocity.y = 0
-
-                if dy < 0:  # Moving up; Hit the bottom side of the wall, lose velocity
+                # Moving up; Hit the bottom side of the wall, lose velocity
+                if dy < 0:
                     self.rect.top = block.rect.bottom
                     self.velocity.y = 0
 
     def jump(self):
-        # jump if standing on a platform
+        # jump only if standing on a platform
         if not self.check_airborne():
             self.velocity.y = - settings.PLAYER_JUMP
-        # elif self.wall_grabbing:
-        #     self.wall_grabbing = False
-        #     self.velocity.y = - settings.PLAYER_JUMP
-        #     self.velocity.x *= -1
 
     def double_jump(self):
         if self.check_airborne() and not self.double_jumping:
@@ -134,6 +137,11 @@ class Player(pygame.sprite.Sprite):
             return False
 
     def update(self):
+        # Regain Energy Every Frame
+        self.current_energy += self.energy_regen
+        if self.current_energy > self.max_energy:
+            self.current_energy = self.max_energy
+
         # This first airborne check sets initial acceleration for current frame
         if self.check_airborne():
             self.acceleration = pygame.math.Vector2(0, settings.GRAVITY_MAGNITUDE)
@@ -142,12 +150,11 @@ class Player(pygame.sprite.Sprite):
 
         # Real-time Player Controls:
 
-        # - airborne controls are diminished
+        # - airborne LEFT/RIGHT controls are diminished
         if self.check_airborne():
             acceleration = 0.2 * settings.PLAYER_ACCELERATION
         else:
             acceleration = settings.PLAYER_ACCELERATION
-
 
         # keyboard controls for left/right
         keys = pygame.key.get_pressed()
@@ -162,16 +169,14 @@ class Player(pygame.sprite.Sprite):
         if self.game.joystick.get_axis(0) > 0.85:
             self.acceleration.x = acceleration
 
-
-
-        # apply drag if airborne, friction only to x direction if walking
+        # Apply resistance depending on block friction or air drag
         if self.check_airborne():
             self.acceleration *= settings.DRAG
         else:
             friction = self.get_block_friction()
             self.acceleration.x += self.velocity.x * friction
 
-        # equations of motion
+        # CALCULATE FINAL RESULTS AND SMOOTH/LIMIT THEM BEFORE CHECKING COLLISIONS
         self.velocity += self.acceleration
         if abs(self.velocity.x) < 0.1:
             self.velocity.x = 0
@@ -179,18 +184,21 @@ class Player(pygame.sprite.Sprite):
             self.velocity.y = settings.MAX_FALL_VELOCITY
         elif self.velocity.y < - settings.MAX_JUMP_VELOCITY:
             self.velocity.y = - settings.MAX_JUMP_VELOCITY
-
-        # elif self.wall_grabbing and self.velocity.y > 0:
-        #     self.velocity.y = 0
-
         new_position = self.position + self.velocity + 0.5 * self.acceleration
         dx = new_position.x - self.position.x
         dy = new_position.y - self.position.y
 
+        # WALL GRAB - RESTRICTS MOVEMENT - NEEDS TO BE ABSOLUTELY LAST
         if self.game.joystick.get_axis(settings.JOYSTICK['LeftTrigger']) > 0.85 and self.check_wall_grab():
-            self.move(0, 0)
-            self.acceleration = pygame.math.Vector2(0, 0)
-            self.velocity = pygame.math.Vector2(0, 0)
+            if self.current_energy >= 1:
+                self.move(0, 0)
+                self.acceleration = pygame.math.Vector2(0, 0)
+                self.velocity = pygame.math.Vector2(0, 0)
+                self.current_energy -= 1
+                if self.current_energy < 0:
+                    self.current_energy = 0
+            else:
+                self.move(dx, dy)
         else:
             self.move(dx, dy)
 

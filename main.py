@@ -12,8 +12,10 @@ class Game:
         pygame.init()
         self.screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
         self.clock = pygame.time.Clock()
-        self.joystick = pygame.joystick.Joystick(0)
-        self.joystick.init()
+        joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
+        if joysticks:
+            self.joystick = joysticks[0]
+            self.joystick.init()
 
         # show title
         #pygame.display.set_caption(settings.TITLE)
@@ -108,8 +110,23 @@ class Game:
         for sprite in self.all_sprites:
             self.screen.blit(sprite.image, self.camera.apply(sprite))
 
+        self.draw_bar(5, 5, self.player.current_energy / self.player.max_energy)
+
         # display frame
         pygame.display.flip()
+
+    def draw_bar(self, x, y, percentage):
+        color = settings.BLUE
+        if percentage < 0:
+            percentage = 0
+        BAR_LENGTH = 100
+        BAR_HEIGHT = 10
+        filled = percentage * BAR_LENGTH
+        outline_rect = pygame.Rect(x, y, BAR_LENGTH, BAR_HEIGHT)
+        filled_rect = pygame.Rect(x, y, filled, BAR_HEIGHT)
+        pygame.draw.rect(self.screen, settings.BLACK, outline_rect)
+        pygame.draw.rect(self.screen, color, filled_rect)
+        pygame.draw.rect(self.screen, settings.WHITE, outline_rect, 2)
 
 game = Game()
 while game.running:
