@@ -49,5 +49,14 @@ BLOCKS['jump'] = {'friction': WALL_FRICTION,
                   'bounce': BOUNCE_MAGNITUDE,
                   'death': False}
 
+# Joystick Buttons
+JOYSTICK = {'A': 11,
+            'B': 12,
+            'X': 13,
+            'Y': 14,
+            'LeftTrigger': 4,
+            'RightTrigger': 5}
+
+
 
 

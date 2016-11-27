@@ -10,9 +10,10 @@ class Game:
     def __init__(self):
         # initialize game window, sound, etc
         pygame.init()
-        #pygame.mixer.init()
         self.screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
         self.clock = pygame.time.Clock()
+        self.joystick = pygame.joystick.Joystick(0)
+        self.joystick.init()
 
         # show title
         #pygame.display.set_caption(settings.TITLE)
@@ -55,19 +56,14 @@ class Game:
 
         self.powerup_img = pygame.image.load(path.join(self.img_folder, 'metal_ball.png')).convert_alpha()
 
-
         # load Tiled map stuff
         self.map = tilemap.Map(path.join(self.map_folder, 'testmap.tmx'))
         self.map_img = self.map.make_map()
         self.map_rect = self.map_img.get_rect()
 
     def update(self):
-        # Game Loop - Update
         self.all_sprites.update()
         self.camera.update(self.player)
-
-        print(self.player.check_airborne()  )
-
 
     def events(self):
         # Game Loop - Events
@@ -79,15 +75,29 @@ class Game:
                     self.playing = False
                 self.running = False
 
+            # Keyboard input events below
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    if not self.player.airborne:
+                    if not self.player.check_airborne():
                         self.player.jump()
-                    if self.player.airborne and self.player.can_double_jump and not self.player.double_jumping:
+                    if self.player.check_airborne() and self.player.can_double_jump and not self.player.double_jumping:
                         self.player.double_jump()
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_SPACE:
                     self.player.jump_cut()
+
+            # Joystick/controller events below
+            if event.type == pygame.JOYBUTTONDOWN:
+                if event.button == settings.JOYSTICK['A']:
+                    if not self.player.check_airborne():
+                        self.player.jump()
+                    if self.player.check_airborne() and self.player.can_double_jump and not self.player.double_jumping:
+                        self.player.double_jump()
+
+            if event.type == pygame.JOYBUTTONUP:
+                if event.button == settings.JOYSTICK['A']:
+                    self.player.jump_cut()
+
 
     def draw(self):
         # show FPS
@@ -95,7 +105,6 @@ class Game:
 
         # DRAW STUFF
         self.screen.blit(self.map_img, self.camera.apply_rect(self.map_rect))
-
         for sprite in self.all_sprites:
             self.screen.blit(sprite.image, self.camera.apply(sprite))
 
