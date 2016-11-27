@@ -17,8 +17,13 @@ class Player(pygame.sprite.Sprite):
         self.velocity = pygame.math.Vector2(0, 0)
         self.acceleration = pygame.math.Vector2(0, 0)
 
+        # ability flags
+        self.can_double_jump = False
+        self.can_wall_grab = True
+
         self.airborne = False
         self.double_jumping = False
+        self.wall_grabbing = False
 
     def move(self, dx, dy):
         # Move each axis separately. Note that this checks for collisions both times.
@@ -32,8 +37,15 @@ class Player(pygame.sprite.Sprite):
         self.rect.x += dx
         self.rect.y += dy
 
+        for block in self.game.abilities:
+            if self.rect.colliderect(block.rect):
+                if block.name == 'double_jump':
+                    self.can_double_jump = True
+                    block.kill()
+                    print("You Gained Double Jump!")
+
         # If you collide with a wall, move out based on velocity
-        for wall in self.game.walls:
+        for wall in self.game.blocks:
             if self.rect.colliderect(wall.rect):
 
                 # check for a death block first / add more here
@@ -42,11 +54,25 @@ class Player(pygame.sprite.Sprite):
                     self.kill()
                     print("You Died!")
 
-
+                # adding in wall grapple stuff
                 if dx > 0:  # Moving right; Hit the left side of the wall
                     self.rect.right = wall.rect.left
+                    keys = pygame.key.get_pressed()
+                    if self.can_wall_grab:
+                        if keys[pygame.K_RIGHT]:
+                            self.wall_grabbing = True
+                            print("Grabbing Right")
+                        else:
+                            self.wall_grabbing = False
                 if dx < 0:  # Moving left; Hit the right side of the wall
                     self.rect.left = wall.rect.right
+                    keys = pygame.key.get_pressed()
+                    if self.can_wall_grab:
+                        if keys[pygame.K_LEFT]:
+                            self.wall_grabbing = True
+                            print("Grabbing Left")
+                        else:
+                            self.wall_grabbing = False
 
                 # Moving down and landing on top of a wall has extra behaviors
                 # Resets the ability to double jump
@@ -64,10 +90,14 @@ class Player(pygame.sprite.Sprite):
                     self.velocity.y = 0
 
     def jump(self):
-        # jump only if standing on a platform
-        if not self.check_airborne() and not self.airborne:
+        # jump if standing on a platform
+        if not self.check_airborne():
             self.airborne = True
-            self.velocity.y = -settings.PLAYER_JUMP
+            self.velocity.y = - settings.PLAYER_JUMP
+        elif self.wall_grabbing:
+            self.wall_grabbing = False
+            self.velocity.y = - settings.PLAYER_JUMP
+            self.velocity.x *= -1
 
     def double_jump(self):
         if self.check_airborne() and not self.double_jumping:
@@ -80,9 +110,11 @@ class Player(pygame.sprite.Sprite):
                 self.velocity.y = -1
 
     def check_airborne(self):
+
         self.rect.y += 1
-        hits = pygame.sprite.spritecollide(self, self.game.walls, False)
+        hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
         self.rect.y -= 1
+
         if hits:
             return False
         else:
@@ -90,7 +122,7 @@ class Player(pygame.sprite.Sprite):
 
     def get_block_friction(self):
         self.rect.y += 1
-        hits = pygame.sprite.spritecollide(self, self.game.walls, False)
+        hits = pygame.sprite.spritecollide(self, self.game.blocks, False)
         self.rect.y -= 1
         if hits:
             return hits[0].friction
@@ -134,10 +166,14 @@ class Player(pygame.sprite.Sprite):
             self.velocity.y = settings.MAX_FALL_VELOCITY
         elif self.velocity.y < - settings.MAX_JUMP_VELOCITY:
             self.velocity.y = - settings.MAX_JUMP_VELOCITY
+        elif self.wall_grabbing and self.velocity.y > 0:
+            self.velocity.y = 0
 
         new_position = self.position + self.velocity + 0.5 * self.acceleration
         dx = new_position.x - self.position.x
         dy = new_position.y - self.position.y
+
+
 
         self.move(dx, dy)
 

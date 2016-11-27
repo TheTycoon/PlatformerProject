@@ -23,20 +23,17 @@ class Game:
     def new(self):
         # start a new game
         self.all_sprites = pygame.sprite.Group()
-        self.walls = pygame.sprite.Group()
+        self.blocks = pygame.sprite.Group()
+        self.abilities = pygame.sprite.Group()
 
         # Initialize Map Objects
         for tile_object in self.map.tmxdata.objects:
-            if tile_object.name == 'Player':
+            if tile_object.type == 'Player':
                 self.player = player.Player(self, tile_object.x, tile_object.y)
-            if tile_object.name == 'Wall':
-                sprites.Wall(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height)
-            if tile_object.name == 'Bounce':
-                sprites.BounceBlock(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height)
-            if tile_object.name == 'Ice':
-                sprites.IceBlock(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height)
-            if tile_object.name == 'Death':
-                sprites.DeathBlock(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height)
+            if tile_object.type == 'Block':
+                sprites.Block(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.name)
+            if tile_object.type == 'AbilityBlock':
+                sprites.AbilityBlock(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.name)
 
         self.camera = tilemap.Camera(self.map.width, self.map.height)
 
@@ -56,6 +53,9 @@ class Game:
         self.img_folder = path.join(self.game_folder, 'img')
         self.map_folder = path.join(self.game_folder, 'maps')
 
+        self.powerup_img = pygame.image.load(path.join(self.img_folder, 'metal_ball.png')).convert_alpha()
+
+
         # load Tiled map stuff
         self.map = tilemap.Map(path.join(self.map_folder, 'testmap.tmx'))
         self.map_img = self.map.make_map()
@@ -66,7 +66,8 @@ class Game:
         self.all_sprites.update()
         self.camera.update(self.player)
 
-        print(self.player.velocity)
+        print(self.player.check_airborne()  )
+
 
     def events(self):
         # Game Loop - Events
@@ -82,7 +83,7 @@ class Game:
                 if event.key == pygame.K_SPACE:
                     if not self.player.airborne:
                         self.player.jump()
-                    if self.player.airborne and not self.player.double_jumping:
+                    if self.player.airborne and self.player.can_double_jump and not self.player.double_jumping:
                         self.player.double_jump()
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_SPACE:

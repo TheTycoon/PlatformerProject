@@ -30,3 +30,24 @@ MAX_FALL_VELOCITY = 20                  #  20.0
 MAX_JUMP_VELOCITY = 100                 # 100.0
 PLAYER_JUMP = 20                        #  20.0
 
+
+# BLOCK TYPES
+BLOCKS = {}
+BLOCKS['wall'] = {'friction': WALL_FRICTION,
+                  'bounce': 0,
+                  'death': False}
+
+BLOCKS['platform'] = {'friction': WALL_FRICTION,
+                  'bounce': 0,
+                  'death': False}
+
+BLOCKS['ice'] = {'friction': WALL_FRICTION / 3,
+                  'bounce': 0,
+                  'death': False}
+
+BLOCKS['jump'] = {'friction': WALL_FRICTION,
+                  'bounce': BOUNCE_MAGNITUDE,
+                  'death': False}
+
+
+
