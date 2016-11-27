@@ -54,9 +54,6 @@ BLOCKS['jump'] = {'friction': settings.WALL_FRICTION,
                   'bounce': settings.BOUNCE_MAGNITUDE,
                   'death': False}
 
-BLOCKS['exit'] = {'friction': settings.WALL_FRICTION,
-                  'bounce': 0,
-                  'death': False}
 
 
 

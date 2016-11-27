@@ -30,7 +30,7 @@ class Game:
         self.interactables = pygame.sprite.Group()
         self.abilities = pygame.sprite.Group()
 
-        self.levels = ['testmap.tmx', 'level1.tmx', 'level2.tmx', 'level3.tmx', 'map5.tmx']
+        self.levels = ['testmap.tmx', 'level1.tmx', 'level2.tmx', 'level3.tmx', 'level4.tmx', 'map5.tmx']
 
         # Load 1st Level
         self.level_number = 1
