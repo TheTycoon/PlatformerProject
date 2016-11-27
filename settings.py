@@ -1,4 +1,4 @@
-import math
+import pygame
 # Game Options and Settings
 
 # define colors
@@ -18,6 +18,7 @@ WIDTH = 640
 HEIGHT = 640
 FPS = 60
 TITLE = 'Platformer Project'
+FONT = pygame.font.match_font('courier')
 TILESIZE = 32
 
 #PLAYER SETTINGS                        # BEST COMBO OF VALUES FOUND SO FAR
@@ -32,23 +33,7 @@ PLAYER_JUMP = 20                        #  20.0
 ENERGY_REGEN = 0.5
 
 
-# BLOCK TYPES
-BLOCKS = {}
-BLOCKS['wall'] = {'friction': WALL_FRICTION,
-                  'bounce': 0,
-                  'death': False}
 
-BLOCKS['platform'] = {'friction': WALL_FRICTION,
-                  'bounce': 0,
-                  'death': False}
-
-BLOCKS['ice'] = {'friction': WALL_FRICTION / 3,
-                  'bounce': 0,
-                  'death': False}
-
-BLOCKS['jump'] = {'friction': WALL_FRICTION,
-                  'bounce': BOUNCE_MAGNITUDE,
-                  'death': False}
 
 # Joystick Buttons
 JOYSTICK = {'A': 11,
@@ -57,6 +42,13 @@ JOYSTICK = {'A': 11,
             'Y': 14,
             'LeftTrigger': 4,
             'RightTrigger': 5}
+
+# controller dictionary
+CONTROLLER = {}
+
+CONTROLLER['joystick'] = {}
+
+CONTROLLER['keyboard'] = {}
 
 
 

@@ -18,7 +18,7 @@ class Player(pygame.sprite.Sprite):
         # ability flags
         self.can_double_jump = False
         self.can_wall_grab = False
-        self.can_dash = False
+        self.can_dash = True
         self.can_air_dash = False
 
         # movement flags
@@ -63,7 +63,6 @@ class Player(pygame.sprite.Sprite):
                     self.kill()
                     print("You Died!")
 
-
                 if dx > 0:  # Moving right; Hit the left side of the wall
                     self.rect.right = block.rect.left
 
@@ -85,6 +84,8 @@ class Player(pygame.sprite.Sprite):
                 if dy < 0:
                     self.rect.top = block.rect.bottom
                     self.velocity.y = 0
+
+
 
     def jump(self):
         # jump only if standing on a platform
@@ -135,13 +136,9 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         self.begin_frame()
-
-        # Check joystick or keyboard controls for left/right movement
-        if self.game.joystick_enabled:
-            self.joystick_controls()
-        else:
-            self.keyboard_controls()
-
+        self.joystick_movement()
+        if self.can_dash and not self.check_airborne():
+            self.check_dash()
         self.apply_resistance()
         self.calculate_velocity()
 
@@ -149,17 +146,14 @@ class Player(pygame.sprite.Sprite):
         dx = new_position.x - self.position.x
         dy = new_position.y - self.position.y
 
-        # Check joystick or keyboard controls for wall grab ability, and move (or don't)
-        if self.game.joystick_enabled:
+        # Final movement
+        if self.can_wall_grab:
             if self.joystick_wall_grab():
                 self.move(0, 0)
             else:
                 self.move(dx, dy)
         else:
-            if self.keyboard_wall_grab():
-                self.move(0, 0)
-            else:
-                self.move(dx, dy)
+            self.move(dx, dy)
 
     def begin_frame(self):
         # Regain the standard amount of energy per frame, set initial accelerations for new frame
@@ -174,7 +168,7 @@ class Player(pygame.sprite.Sprite):
         if self.current_energy > self.max_energy:
             self.current_energy = self.max_energy
 
-    def joystick_controls(self):
+    def joystick_movement(self):
         # If airborne, player acceleratess at only 20% of normal value
         if self.check_airborne():
             acceleration = 0.2 * settings.PLAYER_ACCELERATION
@@ -186,34 +180,20 @@ class Player(pygame.sprite.Sprite):
         if self.game.joystick.get_axis(0) > 0.85:
             self.acceleration.x = acceleration
 
-    def joystick_wall_grab(self):
-        if self.game.joystick.get_axis(settings.JOYSTICK['LeftTrigger']) > 0.85 and self.check_wall():
+    def check_dash(self):
+        if self.game.joystick.get_axis(settings.JOYSTICK['RightTrigger']) > 0.85:
             if self.current_energy >= 1:
-                self.move(0, 0)
-                self.acceleration = pygame.math.Vector2(0, 0)
-                self.velocity = pygame.math.Vector2(0, 0)
+                self.acceleration.x *= 3
                 self.current_energy -= 1
                 if self.current_energy < 0:
                     self.current_energy = 0
                 return True
         return False
 
-    def keyboard_controls(self):
-        # If airborne, player acceleratess at only 20% of normal value
-        if self.check_airborne():
-            acceleration = 0.2 * settings.PLAYER_ACCELERATION
-        else:
-            acceleration = settings.PLAYER_ACCELERATION
 
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            self.acceleration.x = -acceleration
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            self.acceleration.x = acceleration
 
-    def keyboard_wall_grab(self):
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_RETURN] and self.check_wall():
+    def joystick_wall_grab(self):
+        if self.game.joystick.get_axis(settings.JOYSTICK['LeftTrigger']) > 0.85 and self.check_wall():
             if self.current_energy >= 1:
                 self.move(0, 0)
                 self.acceleration = pygame.math.Vector2(0, 0)
@@ -240,6 +220,35 @@ class Player(pygame.sprite.Sprite):
             self.velocity.y = settings.MAX_FALL_VELOCITY
         elif self.velocity.y < - settings.MAX_JUMP_VELOCITY:
             self.velocity.y = - settings.MAX_JUMP_VELOCITY
+
+
+
+    # NOT CURRENTLY SUPPORTING KEYBOARD CONTROLS
+    # def keyboard_controls(self):
+    #     # If airborne, player acceleratess at only 20% of normal value
+    #     if self.check_airborne():
+    #         acceleration = 0.2 * settings.PLAYER_ACCELERATION
+    #     else:
+    #         acceleration = settings.PLAYER_ACCELERATION
+    #
+    #     keys = pygame.key.get_pressed()
+    #     if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+    #         self.acceleration.x = -acceleration
+    #     if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+    #         self.acceleration.x = acceleration
+    #
+    # def keyboard_wall_grab(self):
+    #     keys = pygame.key.get_pressed()
+    #     if keys[pygame.K_RETURN] and self.check_wall():
+    #         if self.current_energy >= 1:
+    #             self.move(0, 0)
+    #             self.acceleration = pygame.math.Vector2(0, 0)
+    #             self.velocity = pygame.math.Vector2(0, 0)
+    #             self.current_energy -= 1
+    #             if self.current_energy < 0:
+    #                 self.current_energy = 0
+    #             return True
+    #     return False
 
 
 

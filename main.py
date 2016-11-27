@@ -27,18 +27,14 @@ class Game:
         # start a new game
         self.all_sprites = pygame.sprite.Group()
         self.blocks = pygame.sprite.Group()
+        self.interactables = pygame.sprite.Group()
         self.abilities = pygame.sprite.Group()
 
-        # Initialize Map Objects
-        for tile_object in self.map.tmxdata.objects:
-            if tile_object.type == 'Player':
-                self.player = player.Player(self, tile_object.x, tile_object.y)
-            if tile_object.type == 'Block':
-                sprites.Block(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.name)
-            if tile_object.type == 'AbilityBlock':
-                sprites.AbilityBlock(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.name)
+        self.levels = ['testmap.tmx', 'level1.tmx', 'level2.tmx']
 
-        self.camera = tilemap.Camera(self.map.width, self.map.height)
+        # Load 1st Level
+        self.level_number = 1
+        self.load_level(self.levels[self.level_number])
 
     def run(self):
         # Game Loop
@@ -58,10 +54,34 @@ class Game:
 
         self.powerup_img = pygame.image.load(path.join(self.img_folder, 'metal_ball.png')).convert_alpha()
 
-        # load Tiled map stuff
-        self.map = tilemap.Map(path.join(self.map_folder, 'testmap.tmx'))
+
+
+    def load_level(self, mapname):
+        self.map = tilemap.Map(path.join(self.map_folder, mapname))    #testmap.tmx is current testing ground
         self.map_img = self.map.make_map()
         self.map_rect = self.map_img.get_rect()
+        self.initialize_level()
+
+    def initialize_level(self):
+        #self.blocks.empty()
+        for tile_object in self.map.tmxdata.objects:
+            if tile_object.type == 'Player':
+                self.player = player.Player(self, tile_object.x, tile_object.y)
+            if tile_object.type == 'Block':
+                sprites.Block(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.name)
+            if tile_object.type == 'Interactable':
+                sprites.Interactable(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.name)
+
+            if tile_object.type == 'AbilityBlock':
+                sprites.AbilityBlock(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.name)
+        self.camera = tilemap.Camera(self.map.width, self.map.height)
+
+    def next_level(self):
+        self.all_sprites.empty()
+        self.interactables.empty()
+        self.blocks.empty()
+        self.level_number += 1
+        self.load_level(self.levels[self.level_number])
 
     def update(self):
         self.all_sprites.update()
@@ -77,28 +97,40 @@ class Game:
                     self.playing = False
                 self.running = False
 
-            # Keyboard input events below
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    if not self.player.check_airborne():
-                        self.player.jump()
-                    if self.player.check_airborne() and self.player.can_double_jump and not self.player.double_jumping:
-                        self.player.double_jump()
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_SPACE:
-                    self.player.jump_cut()
-
-            # Joystick/controller events below
             if event.type == pygame.JOYBUTTONDOWN:
+
                 if event.button == settings.JOYSTICK['A']:
                     if not self.player.check_airborne():
                         self.player.jump()
                     if self.player.check_airborne() and self.player.can_double_jump and not self.player.double_jumping:
                         self.player.double_jump()
+
+                if event.button == settings.JOYSTICK['Y']:
+                    for object in self.interactables:
+                        if object.name == 'exit':
+                            if self.player.rect.colliderect(object.rect):
+                                self.next_level()
+
 
             if event.type == pygame.JOYBUTTONUP:
                 if event.button == settings.JOYSTICK['A']:
                     self.player.jump_cut()
+
+
+
+
+            # # Keyboard input events below || NOT CURRENTLY SUPPORTING KEYBOARD
+            # if event.type == pygame.KEYDOWN:
+            #     if event.key == pygame.K_SPACE:
+            #         if not self.player.check_airborne():
+            #             self.player.jump()
+            #         if self.player.check_airborne() and self.player.can_double_jump and not self.player.double_jumping:
+            #             self.player.double_jump()
+            # if event.type == pygame.KEYUP:
+            #     if event.key == pygame.K_SPACE:
+            #         self.player.jump_cut()
+
+            # Joystick/controller events below
 
 
     def draw(self):
@@ -128,9 +160,47 @@ class Game:
         pygame.draw.rect(self.screen, color, filled_rect)
         pygame.draw.rect(self.screen, settings.WHITE, outline_rect, 2)
 
+    def draw_text(self, text, size, color, x, y, centered):
+        font = pygame.font.Font(settings.FONT, size)
+        text_surface = font.render(text, True, color)
+        text_rect = text_surface.get_rect()
+        text_rect.x = x
+        text_rect.y = y
+        if centered:
+            text_rect.midtop = (x, y)
+        self.screen.blit(text_surface, text_rect)
+
+    def show_start_screen(self):
+        waiting = True
+        while waiting:
+            self.clock.tick(settings.FPS)
+
+            # Draw All Text To Screen
+            self.draw_text(settings.TITLE, 60, settings.WHITE, settings.WIDTH / 2, settings.HEIGHT / 4, True)
+            self.draw_text('Press a joystick button to play', 30, settings.WHITE, settings.WIDTH / 2, settings.HEIGHT / 2, True)
+            self.draw_text('Press the escape button to quit', 20, settings.WHITE, settings.WIDTH / 2, settings.HEIGHT / 2 + 50, True)
+            pygame.display.flip()
+
+            for event in pygame.event.get():
+                # Quit if player exits game
+                if event.type == pygame.QUIT:
+                    waiting = False
+                    self.running = False
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        waiting = False
+                        self.running = False
+
+                if event.type == pygame.JOYBUTTONDOWN:
+                    waiting = False
+
+
 game = Game()
+game.new()
+game.show_start_screen()
+
 while game.running:
-    game.new()
     game.run()
 
 pygame.quit()
