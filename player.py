@@ -158,16 +158,17 @@ class Player(pygame.sprite.Sprite):
 
         # keyboard controls for left/right
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
             self.acceleration.x = -acceleration
-        if keys[pygame.K_RIGHT]:
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
             self.acceleration.x = acceleration
 
         # joystick controls for left/right
-        if self.game.joystick.get_axis(0) < -0.85:
-            self.acceleration.x = - acceleration
-        if self.game.joystick.get_axis(0) > 0.85:
-            self.acceleration.x = acceleration
+        if self.game.joystick_enabled:
+            if self.game.joystick.get_axis(0) < -0.85:
+                self.acceleration.x = - acceleration
+            if self.game.joystick.get_axis(0) > 0.85:
+                self.acceleration.x = acceleration
 
         # Apply resistance depending on block friction or air drag
         if self.check_airborne():
@@ -189,18 +190,33 @@ class Player(pygame.sprite.Sprite):
         dy = new_position.y - self.position.y
 
         # WALL GRAB - RESTRICTS MOVEMENT - NEEDS TO BE ABSOLUTELY LAST
-        if self.game.joystick.get_axis(settings.JOYSTICK['LeftTrigger']) > 0.85 and self.check_wall_grab():
-            if self.current_energy >= 1:
-                self.move(0, 0)
-                self.acceleration = pygame.math.Vector2(0, 0)
-                self.velocity = pygame.math.Vector2(0, 0)
-                self.current_energy -= 1
-                if self.current_energy < 0:
-                    self.current_energy = 0
+        if self.game.joystick_enabled:
+            if self.game.joystick.get_axis(settings.JOYSTICK['LeftTrigger']) > 0.85 and self.check_wall_grab():
+                if self.current_energy >= 1:
+                    self.move(0, 0)
+                    self.acceleration = pygame.math.Vector2(0, 0)
+                    self.velocity = pygame.math.Vector2(0, 0)
+                    self.current_energy -= 1
+                    if self.current_energy < 0:
+                        self.current_energy = 0
+                else:
+                    self.move(dx, dy)
             else:
                 self.move(dx, dy)
         else:
-            self.move(dx, dy)
+            if keys[pygame.K_RETURN] and self.check_wall_grab():
+                if self.current_energy >= 1:
+                    self.move(0, 0)
+                    self.acceleration = pygame.math.Vector2(0, 0)
+                    self.velocity = pygame.math.Vector2(0, 0)
+                    self.current_energy -= 1
+                    if self.current_energy < 0:
+                        self.current_energy = 0
+                else:
+                    self.move(dx, dy)
+            else:
+                self.move(dx, dy)
+
 
 
 

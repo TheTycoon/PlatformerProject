@@ -16,6 +16,9 @@ class Game:
         if joysticks:
             self.joystick = joysticks[0]
             self.joystick.init()
+            self.joystick_enabled = True
+        else:
+            self.joystick_enabled = False
 
         # show title
         #pygame.display.set_caption(settings.TITLE)
