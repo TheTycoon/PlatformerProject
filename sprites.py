@@ -29,7 +29,7 @@ class Interactable(pygame.sprite.Sprite):
 
 class Ability(pygame.sprite.Sprite):
     def __init__(self, game, x, y, w, h, name):
-        self.groups = game.all_sprites, game.abilities
+        self.groups = game.abilities
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.image = game.powerup_img
         self.rect = pygame.Rect(x, y, w, h)
@@ -53,6 +53,10 @@ BLOCKS['ice'] = {'friction': settings.WALL_FRICTION / 3,
 BLOCKS['jump'] = {'friction': settings.WALL_FRICTION,
                   'bounce': settings.BOUNCE_MAGNITUDE,
                   'death': False}
+
+BLOCKS['death'] = {'friction': 0,
+                   'bounce': 0,
+                   'death': True}
 
 
 

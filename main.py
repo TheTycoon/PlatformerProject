@@ -30,7 +30,9 @@ class Game:
         self.interactables = pygame.sprite.Group()
         self.abilities = pygame.sprite.Group()
 
-        self.levels = ['testmap.tmx', 'level1.tmx', 'level2.tmx', 'level3.tmx', 'level4.tmx', 'map5.tmx']
+        self.levels = ['testmap.tmx', 'level1.tmx', 'level2.tmx', 'level3.tmx', 'level4.tmx', 'level5.tmx',
+                       'level6.tmx']
+        self.player = player.Player(self, 0, 0,)
 
         # Load 1st Level
         self.level_number = 1
@@ -66,22 +68,29 @@ class Game:
         #self.blocks.empty()
         for tile_object in self.map.tmxdata.objects:
             if tile_object.type == 'Player':
-                self.player = player.Player(self, tile_object.x, tile_object.y)
+                self.player.position.x = tile_object.x
+                self.player.position.y = tile_object.y
+                self.player.rect.x = tile_object.x
+                self.player.rect.y = tile_object.y
             if tile_object.type == 'Block':
                 sprites.Block(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.name)
             if tile_object.type == 'Interactable':
                 sprites.Interactable(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.name)
-
             if tile_object.type == 'Ability':
                 sprites.Ability(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.name)
         self.camera = tilemap.Camera(self.map.width, self.map.height)
 
     def next_level(self):
-        self.all_sprites.empty()
         self.interactables.empty()
         self.blocks.empty()
         self.level_number += 1
         self.load_level(self.levels[self.level_number])
+
+    def restart_level(self):
+        self.interactables.empty()
+        self.blocks.empty()
+        self.load_level(self.levels[self.level_number])
+
 
     def update(self):
         self.all_sprites.update()
@@ -140,6 +149,9 @@ class Game:
         # DRAW STUFF
         self.screen.blit(self.map_img, self.camera.apply_rect(self.map_rect))
         for sprite in self.all_sprites:
+            self.screen.blit(sprite.image, self.camera.apply(sprite))
+
+        for sprite in self.abilities:
             self.screen.blit(sprite.image, self.camera.apply(sprite))
 
         self.draw_bar(5, 5, self.player.current_energy / self.player.max_energy)

@@ -17,9 +17,9 @@ class Player(pygame.sprite.Sprite):
 
         # ability flags
         self.can_double_jump = False
-        self.can_wall_grab = True
-        self.can_sprint = True
-        self.can_air_dash = True
+        self.can_wall_grab = False
+        self.can_sprint = False
+        self.can_air_dash = False
 
         # movement flags
         self.double_jumping = False
@@ -28,8 +28,8 @@ class Player(pygame.sprite.Sprite):
         self.air_dashing = False
 
         # attributes of the player
-        self.max_energy = 100
-        self.current_energy = 100
+        self.max_energy = 20
+        self.current_energy = 20
         self.energy_regen = settings.ENERGY_REGEN
 
     def move(self, dx, dy):
@@ -54,6 +54,10 @@ class Player(pygame.sprite.Sprite):
                     self.can_wall_grab = True
                     block.kill()
                     print("You Gained Wall Grab!")
+                if block.name == 'sprint':
+                    self.can_sprint = True
+                    block.kill()
+                    print("You Gained Sprint!")
 
         # If you collide with a wall, move out based on velocity
         for block in self.game.blocks:
@@ -62,7 +66,7 @@ class Player(pygame.sprite.Sprite):
                 # check for a death block first / add more here
                 # animation for death, message, game over screen, restart level, etc
                 if block.death is True:
-                    self.kill()
+                    self.game.restart_level()
                     print("You Died!")
 
                 if dx > 0:  # Moving right; Hit the left side of the wall
@@ -89,6 +93,9 @@ class Player(pygame.sprite.Sprite):
                 if dy < 0:
                     self.rect.top = block.rect.bottom
                     self.velocity.y = 0
+
+        self.position.x = self.rect.x
+        self.position.y = self.rect.y
 
 
 
