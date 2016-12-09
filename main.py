@@ -34,7 +34,6 @@ class Game:
                        'level6.tmx']
         self.player = player.Player(self, 0, 0,)
 
-        # Load 1st Level
         self.level_number = 1
         self.load_level(self.levels[self.level_number])
 
@@ -91,7 +90,6 @@ class Game:
         self.blocks.empty()
         self.load_level(self.levels[self.level_number])
 
-
     def update(self):
         self.all_sprites.update()
         self.camera.update(self.player)
@@ -107,22 +105,29 @@ class Game:
                 self.running = False
 
             if event.type == pygame.JOYBUTTONDOWN:
+                print(event.button)
 
-                if event.button == settings.JOYSTICK['A']:
+                if event.button == settings.JOYBUTTONS['A']:
                     if not self.player.check_airborne():
                         self.player.jump()
                     if self.player.check_airborne() and self.player.can_double_jump and not self.player.double_jumping:
                         self.player.double_jump()
 
-                if event.button == settings.JOYSTICK['Y']:
+                if event.button == settings.JOYBUTTONS['Y']:
                     for object in self.interactables:
                         if object.name == 'exit':
                             if self.player.rect.colliderect(object.rect):
                                 self.next_level()
 
+                if event.button == settings.JOYBUTTONS['LeftBumper']:
+                    self.player.joystick_air_dash('left')
+
+                if event.button == settings.JOYBUTTONS['RightBumper']:
+                    self.player.joystick_air_dash('right')
+
 
             if event.type == pygame.JOYBUTTONUP:
-                if event.button == settings.JOYSTICK['A']:
+                if event.button == settings.JOYBUTTONS['A']:
                     self.player.jump_cut()
 
 

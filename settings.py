@@ -37,12 +37,29 @@ AIR_DASH_MAGNITUDE = 100
 
 
 # Joystick Buttons
-JOYSTICK = {'A': 11,
-            'B': 12,
-            'X': 13,
-            'Y': 14,
-            'LeftTrigger': 4,
-            'RightTrigger': 5}
+JOYBUTTONS = {
+            'D_Up'        : 0,
+            'D_Down'      : 1,
+            'D_Left'      : 2,
+            'D_Right'     : 3,
+            'Start'       : 4,
+            'Back'        : 5,
+            'LeftStick'   : 6,
+            'RightStick'  : 7,
+            'LeftBumper'  : 8,
+            'RightBumper' : 9,
+            'A'           : 11,
+            'B'           : 12,
+            'X'           : 13,
+            'Y'           : 14
+           }
+
+JOYAXIS = {
+    'LeftHorizontal': 0,
+    'LeftTrigger': 4,
+    'RightTrigger': 5
+}
+
 
 # controller dictionary
 CONTROLLER = {}
