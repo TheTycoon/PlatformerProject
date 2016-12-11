@@ -107,12 +107,15 @@ class Player(pygame.sprite.Sprite):
 
     def bounce_collide(self, block, dx, dy):
         if dy > 0:
+
             self.rect.bottom = block.rect.top
             self.double_jumping = False
             self.air_dashing = False
             if block.direction == 'up':
                 self.velocity.y *= -1
                 self.velocity.y -= block.bounce
+            else:
+                self.velocity.y = 0
         if dy < 0:
             self.rect.top = block.rect.bottom
             if block.direction == 'down':
@@ -148,8 +151,7 @@ class Player(pygame.sprite.Sprite):
     def platform_drop(self):
         if self.check_platform():
             self.rect.y += settings.PLAYER_HEIGHT
-            self.velocity.y = settings.PLAYER_JUMP / 2
-            print("Platform Drop")
+            self.velocity.y = settings.PLAYER_JUMP / 2.5
 
     def check_platform(self):
         hits = False

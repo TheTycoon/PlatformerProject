@@ -98,6 +98,8 @@ class Game:
         self.all_sprites.update()
         self.camera.update(self.player)
 
+        print(self.player.velocity)
+
 
     def events(self):
         # Game Loop - Events
