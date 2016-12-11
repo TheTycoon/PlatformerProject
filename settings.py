@@ -38,26 +38,24 @@ AIR_DASH_MAGNITUDE = 100
 
 # Joystick Buttons
 JOYBUTTONS = {
-            'D_Up'        : 0,
-            'D_Down'      : 1,
-            'D_Left'      : 2,
-            'D_Right'     : 3,
-            'Start'       : 4,
-            'Back'        : 5,
-            'LeftStick'   : 6,
-            'RightStick'  : 7,
-            'LeftBumper'  : 8,
-            'RightBumper' : 9,
-            'A'           : 11,
-            'B'           : 12,
-            'X'           : 13,
-            'Y'           : 14
+            'A'           : 0,
+            'B'           : 1,
+            'X'           : 2,
+            'Y'           : 3,
+            'LeftBumper'  : 4,
+            'RightBumper' : 5,
+            'Back'        : 6,
+            'Start'       : 7,
+            'LeftStick'   : 8,
+            'RightStick'  : 9
            }
 
 JOYAXIS = {
-    'LeftHorizontal': 0,
-    'LeftTrigger': 4,
-    'RightTrigger': 5
+    'LeftHorizontal' : 0,
+    'LeftVertical'   : 1,
+    'Trigger'        : 2,               # Positive 1 is Left Down, Negative 1 is Right Down
+    'RightHorizontal': 3,
+    'RightVertical'  : 4
 }
 
 

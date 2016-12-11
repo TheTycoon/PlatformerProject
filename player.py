@@ -132,16 +132,19 @@ class Player(pygame.sprite.Sprite):
         else:
             return 0
 
-    def check_wall(self):
-        self.rect.x += 1
-        hits_right = pygame.sprite.spritecollide(self, self.game.blocks, False)
-        self.rect.x -= 1
+    def check_wall(self, direction):
+        if direction == 'left':
+            check = -1
+        elif direction == 'right':
+            check = 1
+        else:
+            check = 0
 
-        self.rect.x -= 1
-        hits_left = pygame.sprite.spritecollide(self, self.game.blocks, False)
-        self.rect.x += 1
+        self.rect.x += check
+        hits= pygame.sprite.spritecollide(self, self.game.blocks, False)
+        self.rect.x -= check
 
-        if hits_right or hits_left:
+        if hits:
             return True
         else:
             return False
@@ -163,7 +166,6 @@ class Player(pygame.sprite.Sprite):
         if self.check_airborne():
             if self.can_wall_grab and self.joystick_wall_grab():
                 stop_movement = True
-
 
         if not stop_movement:
             self.move(dx, dy)
@@ -195,26 +197,29 @@ class Player(pygame.sprite.Sprite):
 
     def joystick_sprint(self):
         if self.current_energy >= 1:
-            if self.game.joystick.get_axis(settings.JOYAXIS['RightTrigger']) > 0.85:
+            if self.game.joystick.get_axis(settings.JOYAXIS['Trigger']) < -0.85:
                 self.current_energy -= 1
                 self.acceleration.x *= 3
                 return True
         return False
 
-    # Need to clean this up a bit, maybe change the check wall method
     def joystick_wall_grab(self):
-        if self.check_wall():
-            if self.game.joystick.get_axis(settings.JOYAXIS['LeftHorizontal']) > 0.85 or \
-               self.game.joystick.get_axis(settings.JOYAXIS['LeftHorizontal']) < -0.85:
-                    if self.current_energy >= 1:
-                        self.acceleration = pygame.math.Vector2(0, 0)
-                        self.velocity = pygame.math.Vector2(0, 0)
-                        self.current_energy -= 1
-                        self.move(0, 0)
-                        self.double_jumping = False
-                        return True
-        return False
+        if self.check_wall('left') and self.game.joystick.get_axis(settings.JOYAXIS['LeftHorizontal']) < -0.85:
+            self.wall_grabbing = True
+        elif self.check_wall('right') and self.game.joystick.get_axis(settings.JOYAXIS['LeftHorizontal']) > 0.85:
+            self.wall_grabbing = True
+        else:
+            self.wall_grabbing = False
 
+        if self.wall_grabbing == True:
+            if self.current_energy >= 1:
+                self.acceleration = pygame.math.Vector2(0, 0)
+                self.velocity = pygame.math.Vector2(0, 0)
+                self.current_energy -= 1
+                self.move(0, 0)
+                self.double_jumping = False
+                return True
+        return False
 
     # this needs to cost a lot of energy or be reworked a bit
     def joystick_air_dash(self, direction):

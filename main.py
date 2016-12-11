@@ -94,6 +94,8 @@ class Game:
         self.all_sprites.update()
         self.camera.update(self.player)
 
+        print(self.player.wall_grabbing)
+
     def events(self):
         # Game Loop - Events
         for event in pygame.event.get():
@@ -105,7 +107,7 @@ class Game:
                 self.running = False
 
             if event.type == pygame.JOYBUTTONDOWN:
-                print(event.button)
+                #print(event.button)
 
                 if event.button == settings.JOYBUTTONS['A']:
                     if not self.player.check_airborne():
@@ -129,6 +131,9 @@ class Game:
             if event.type == pygame.JOYBUTTONUP:
                 if event.button == settings.JOYBUTTONS['A']:
                     self.player.jump_cut()
+
+            if event.type == pygame.JOYAXISMOTION:
+                print(event)
 
 
 

@@ -1,0 +1,40 @@
+========================================================================================================================
+To-Do List
+========================================================================================================================
+- Player Character
+    Mechanics:
+        - Basic Movement        X
+        - Double Jump           X
+        - Sprint                X
+        - Teleport              X
+        - Wall Slide/Grab       X
+        - Wall Jump ^
+
+        These 3 can be thought about later
+        - Slide/Shrink
+        - Grapple
+        - Reverse Gravity
+
+- Block Types:
+    - Normal Walls              X
+    - Bounce Blocks             X
+    - Speed Blocks              X
+    - Slippery Blocks           X
+    - Spike Blocks              X
+    - Exit Block                X
+    - Platforms/Jump-through
+    - Switches
+
+
+
+- Demo Level Progression:
+    1) Basic Movement Level         X
+    2) Introduce Bouncing Blocks    X
+    3) * Learn/Use Double Jump      X
+    4) Introduce Ice Blocks         X
+    5) * Learn/Use Dash             X
+    6) Introduce Death Blocks       X
+    7) * Learn/Use Wall Jump
+    8) Introduce Platforms
+    9) * Learn/Use Teleport
+    10) Final Level - Large - Include All Abilities and Blocks
