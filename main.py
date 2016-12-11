@@ -24,9 +24,10 @@ class Game:
         self.load_data()
 
     def new(self):
-        # start a new game
         self.all_sprites = pygame.sprite.Group()
         self.blocks = pygame.sprite.Group()
+        self.walls = pygame.sprite.Group()
+        self.platforms = pygame.sprite.Group()
         self.interactables = pygame.sprite.Group()
         self.abilities = pygame.sprite.Group()
 
@@ -34,7 +35,7 @@ class Game:
                        'level6.tmx']
         self.player = player.Player(self, 0, 0,)
 
-        self.level_number = 1
+        self.level_number = 0
         self.load_level(self.levels[self.level_number])
 
     def run(self):
@@ -64,7 +65,6 @@ class Game:
         self.initialize_level()
 
     def initialize_level(self):
-        #self.blocks.empty()
         for tile_object in self.map.tmxdata.objects:
             if tile_object.type == 'Player':
                 self.player.position.x = tile_object.x
@@ -72,7 +72,11 @@ class Game:
                 self.player.rect.x = tile_object.x
                 self.player.rect.y = tile_object.y
             if tile_object.type == 'Block':
-                sprites.Block(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.name)
+                if tile_object.name == 'bounce':
+                    direction = tile_object.Direction
+                else:
+                    direction = None
+                sprites.Block(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.name, direction)
             if tile_object.type == 'Interactable':
                 sprites.Interactable(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height, tile_object.name)
             if tile_object.type == 'Ability':
@@ -94,7 +98,6 @@ class Game:
         self.all_sprites.update()
         self.camera.update(self.player)
 
-        print(self.player.wall_grabbing)
 
     def events(self):
         # Game Loop - Events
@@ -107,12 +110,13 @@ class Game:
                 self.running = False
 
             if event.type == pygame.JOYBUTTONDOWN:
-                #print(event.button)
 
                 if event.button == settings.JOYBUTTONS['A']:
-                    if not self.player.check_airborne():
+                    if self.joystick.get_axis(settings.JOYAXIS['LeftVertical']) > 0.85:
+                        self.player.platform_drop()
+                    elif not self.player.check_airborne():
                         self.player.jump()
-                    if self.player.check_airborne() and self.player.can_double_jump and not self.player.double_jumping:
+                    elif self.player.check_airborne() and self.player.can_double_jump and not self.player.double_jumping:
                         self.player.double_jump()
 
                 if event.button == settings.JOYBUTTONS['Y']:
@@ -132,8 +136,6 @@ class Game:
                 if event.button == settings.JOYBUTTONS['A']:
                     self.player.jump_cut()
 
-            if event.type == pygame.JOYAXISMOTION:
-                print(event)
 
 
 

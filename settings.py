@@ -22,6 +22,8 @@ FONT = pygame.font.match_font('courier')
 TILESIZE = 32
 
 #PLAYER SETTINGS                        # BEST COMBO OF VALUES FOUND SO FAR
+PLAYER_WIDTH = 32
+PLAYER_HEIGHT = 64
 PLAYER_ACCELERATION = 2.5               #   2.5
 GRAVITY_MAGNITUDE = 5                   #   5.0
 BOUNCE_MAGNITUDE = 20                   #  20.0

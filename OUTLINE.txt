@@ -22,7 +22,7 @@ To-Do List
     - Slippery Blocks           X
     - Spike Blocks              X
     - Exit Block                X
-    - Platforms/Jump-through
+    - Platforms/Jump-through    X
     - Switches
 
 

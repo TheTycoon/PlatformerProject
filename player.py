@@ -7,7 +7,7 @@ class Player(pygame.sprite.Sprite):
         self.groups = game.all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pygame.Surface((32, 32))
+        self.image = pygame.Surface((settings.PLAYER_WIDTH, settings.PLAYER_HEIGHT))
         self.rect = self.image.get_rect()
         self.image.fill(settings.BLUE, self.rect)
         self.rect.topleft = (x, y)
@@ -44,6 +44,22 @@ class Player(pygame.sprite.Sprite):
         self.rect.x += dx
         self.rect.y += dy
 
+        # Collisions are different for different kinds of blocks
+        for block in self.game.blocks:
+            if self.rect.colliderect(block.rect):
+                if block.death is True:
+                    self.game.restart_level()
+                if block.name == 'wall':
+                    self.wall_collide(block, dx, dy)
+                elif block.name == 'platform':
+                    self.platform_collide(block, dy)
+                elif block.name == 'bounce':
+                    self.bounce_collide(block, dx, dy)
+
+        self.position.x = self.rect.x
+        self.position.y = self.rect.y
+
+        # this is currently placeholder for gaining abilities
         for block in self.game.abilities:
             if self.rect.colliderect(block.rect):
                 if block.name == 'double_jump':
@@ -59,44 +75,59 @@ class Player(pygame.sprite.Sprite):
                     block.kill()
                     print("You Gained Sprint!")
 
-        # If you collide with a wall, move out based on velocity
-        for block in self.game.blocks:
-            if self.rect.colliderect(block.rect):
+    def wall_collide(self, block, dx, dy):
+        if dx > 0:  # Moving right; Hit the left side of the wall
+            self.rect.right = block.rect.left
 
-                # check for a death block first / add more here
-                # animation for death, message, game over screen, restart level, etc
-                if block.death is True:
-                    self.game.restart_level()
-                    print("You Died!")
+        if dx < 0:  # Moving left; Hit the right side of the wall
+            self.rect.left = block.rect.right
 
-                if dx > 0:  # Moving right; Hit the left side of the wall
-                    self.rect.right = block.rect.left
+        # Moving down; Hit the top side of the wall
+        # Extra Behaviors:
+        # - Resets the ability to double jump
+        # - Resets the ability to air dash
+        if dy > 0:
+            self.rect.bottom = block.rect.top
+            self.double_jumping = False
+            self.air_dashing = False
+            self.velocity.y = 0
 
-                if dx < 0:  # Moving left; Hit the right side of the wall
-                    self.rect.left = block.rect.right
+        # Moving up; Hit the bottom side of the wall, lose velocity
+        if dy < 0:
+            self.rect.top = block.rect.bottom
+            self.velocity.y = 0
 
-                # Moving down; Hit the top side of the wall
-                # Extra Behaviors:
-                # - Resets the ability to double jump
-                # - Resets the ability to air dash
-                # - Applies bounce if applicable
-                if dy > 0:
-                    self.rect.bottom = block.rect.top
-                    self.double_jumping = False
-                    self.air_dashing = False
-                    if block.bounce > 0:
-                        self.velocity.y *= -1
-                        self.velocity.y += -block.bounce
-                    else:
-                        self.velocity.y = 0
-                # Moving up; Hit the bottom side of the wall, lose velocity
-                if dy < 0:
-                    self.rect.top = block.rect.bottom
-                    self.velocity.y = 0
+    def platform_collide(self, block, dy):
+        # moving down when colliding
+        if dy > 0:
+            self.velocity.y = 0
+            self.rect.bottom = block.rect.top
+            self.double_jumping = False
+            self.air_dashing = False
 
-        self.position.x = self.rect.x
-        self.position.y = self.rect.y
-
+    def bounce_collide(self, block, dx, dy):
+        if dy > 0:
+            self.rect.bottom = block.rect.top
+            self.double_jumping = False
+            self.air_dashing = False
+            if block.direction == 'up':
+                self.velocity.y *= -1
+                self.velocity.y -= block.bounce
+        if dy < 0:
+            self.rect.top = block.rect.bottom
+            if block.direction == 'down':
+                self.velocity.y *= -1
+                self.velocity.y += block.bounce
+        if dx > 0:
+            self.rect.right = block.rect.left
+            if block.direction == 'left':
+                self.velocity.x *= -1
+                self.velocity.x -= block.bounce
+        if dx < 0:
+            self.rect.left = block.rect.right
+            if block.direction == 'right':
+                self.velocity.x *= -1
+                self.velocity.x += block.bounce
 
 
     def jump(self):
@@ -113,6 +144,26 @@ class Player(pygame.sprite.Sprite):
         if self.check_airborne():
             if self.velocity.y < -1:
                 self.velocity.y = -1
+
+    def platform_drop(self):
+        if self.check_platform():
+            self.rect.y += settings.PLAYER_HEIGHT
+            self.velocity.y = settings.PLAYER_JUMP / 2
+            print("Platform Drop")
+
+    def check_platform(self):
+        hits = False
+        self.rect.y += 1
+        for platform in self.game.platforms:
+            if self.rect.bottom >= platform.rect.top and self.rect.top < platform.rect.top:
+                if self.rect.colliderect(platform):
+                    hits = True
+        self.rect.y -= 1
+
+        if hits:
+            return True
+        else:
+            return False
 
     def check_airborne(self):
         self.rect.y += 1
@@ -133,6 +184,7 @@ class Player(pygame.sprite.Sprite):
             return 0
 
     def check_wall(self, direction):
+
         if direction == 'left':
             check = -1
         elif direction == 'right':
@@ -141,13 +193,15 @@ class Player(pygame.sprite.Sprite):
             check = 0
 
         self.rect.x += check
-        hits= pygame.sprite.spritecollide(self, self.game.blocks, False)
+        hits= pygame.sprite.spritecollide(self, self.game.walls, False)
         self.rect.x -= check
 
         if hits:
             return True
         else:
             return False
+
+
 
     def update(self):
         self.begin_frame()
