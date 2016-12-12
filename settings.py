@@ -1,5 +1,4 @@
 import pygame
-# Game Options and Settings
 
 # define colors
 WHITE  = (255, 255, 255)
@@ -32,12 +31,9 @@ DRAG = 0.5                              #   0.5
 MAX_FALL_VELOCITY = 20                  #  20.0
 MAX_JUMP_VELOCITY = 100                 # 100.0
 PLAYER_JUMP = 20                        #  20.0
-ENERGY_REGEN = 0.5
-ENERGY_COOLDOWN = 5000                  # time in milliseconds
-AIR_DASH_MAGNITUDE = 100                # number of pixels instantly traveled
-
-
-
+ENERGY_REGEN = 1                        # Don't use decimals
+ENERGY_COOLDOWN = 3000                  # time in milliseconds
+TELEPORT_MAGNITUDE = 100                # number of pixels instantly traveled
 
 # Joystick Buttons
 JOYBUTTONS = {
@@ -60,15 +56,3 @@ JOYAXIS = {
     'RightHorizontal': 3,
     'RightVertical'  : 4
 }
-
-
-# controller dictionary
-CONTROLLER = {}
-
-CONTROLLER['joystick'] = {}
-
-CONTROLLER['keyboard'] = {}
-
-
-
-

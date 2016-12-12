@@ -19,14 +19,14 @@ class Player(pygame.sprite.Sprite):
         self.can_double_jump = True
         self.can_wall_grab = True
         self.can_sprint = True
-        self.can_air_dash = True
+        self.can_teleport = True
 
         # movement flags
         self.double_jumping = False
         self.wall_grabbing = False
         self.wall_jumping = False
         self.sprinting = False
-        self.air_dashing = False
+        self.teleporting = False
 
         # attributes of the player
         self.max_energy = 20
@@ -35,7 +35,6 @@ class Player(pygame.sprite.Sprite):
         self.cooling_down = False
         self.cool_down = settings.ENERGY_COOLDOWN
         self.last = pygame.time.get_ticks()
-
 
     def move(self, dx, dy):
         # Move each axis separately. Note that this checks for collisions both times.
@@ -84,8 +83,7 @@ class Player(pygame.sprite.Sprite):
         self.velocity.y = velocity
         self.double_jumping = False
         self.wall_jumping = False
-        self.air_dashing = False
-
+        self.teleporting = False
 
     def wall_collide(self, block, dx, dy):
         if dx > 0:  # Moving right; Hit the left side of the wall
@@ -112,7 +110,6 @@ class Player(pygame.sprite.Sprite):
         if dy > 0:
             self.rect.bottom = block.rect.top
             self.landing_reset()
-
 
     def bounce_collide(self, block, dx, dy):
         if dy > 0:
@@ -155,8 +152,6 @@ class Player(pygame.sprite.Sprite):
         self.wall_jumping = True
         self.wall_grabbing = False
         self.velocity.y = -3 * settings.PLAYER_JUMP
-
-
 
     def jump_cut(self):
         if self.check_airborne():
@@ -218,8 +213,6 @@ class Player(pygame.sprite.Sprite):
         else:
             return False
 
-
-
     def update(self):
         self.begin_frame()
         self.joystick_movement()
@@ -244,9 +237,10 @@ class Player(pygame.sprite.Sprite):
             self.move(dx, dy)
 
     def begin_frame(self):
-        # Regain the standard amount of energy per frame, set initial accelerations for new frame
-        if self.current_energy == 0 and not self.cooling_down:
+        # Regain the standard amount of energy per frame if not on cooldown, set initial accelerations for new frame
+        if self.current_energy <= 0 and not self.cooling_down:
             self.cooling_down = True
+            self.last = pygame.time.get_ticks()
 
         now = pygame.time.get_ticks()
         if self.cooling_down and now - self.last >= self.cool_down:
@@ -267,7 +261,7 @@ class Player(pygame.sprite.Sprite):
             self.current_energy = self.max_energy
 
     def joystick_movement(self):
-        # If airborne, player acceleratess at only 20% of normal value, gives almost no air control
+        # If airborne, player accelerates at only 20% of normal value, gives almost no air control
         if self.check_airborne():
             acceleration = 0.2 * settings.PLAYER_ACCELERATION
         else:
@@ -279,9 +273,11 @@ class Player(pygame.sprite.Sprite):
             self.acceleration.x = acceleration
 
     def joystick_sprint(self):
-        if self.current_energy >= 1:
+        if self.current_energy >= 2:
             if self.game.joystick.get_axis(settings.JOYAXIS['Trigger']) < -0.85:
-                self.current_energy -= 1
+                self.current_energy -= 2
+                if self.current_energy <= 0:
+                    self.current_energy = 0
                 self.acceleration.x *= 3
                 return True
         return False
@@ -295,26 +291,26 @@ class Player(pygame.sprite.Sprite):
             self.wall_grabbing = False
 
         if self.wall_grabbing is True:
-            if self.current_energy >= 1:
+            if self.current_energy >= 2:
                 self.acceleration = pygame.math.Vector2(0, 0)
                 self.velocity = pygame.math.Vector2(0, 0)
-                self.current_energy -= 1
+                self.current_energy -= 2
                 self.move(0, 0)
                 self.double_jumping = False
                 return True
         return False
 
-    # this needs to cost a lot of energy or be reworked a bit
-    def joystick_air_dash(self, direction):
+    def joystick_teleport(self, direction):
         if direction == 'left':
-            dash = - settings.AIR_DASH_MAGNITUDE
-        if direction == 'right':
-            dash = settings.AIR_DASH_MAGNITUDE
-        if self.current_energy >= 10:
-            self.current_energy -= 10
-            self.air_dashing = True
-            self.move(dash, 0)
-
+            teleport = - settings.TELEPORT_MAGNITUDE
+        elif direction == 'right':
+            teleport = settings.TELEPORT_MAGNITUDE
+        else:
+            teleport = 0
+        if self.current_energy >= self.max_energy / 2:
+            self.current_energy = 0
+            self.teleporting = True
+            self.move(teleport, 0)
 
     def apply_resistance(self):
         # Apply resistance depending on block friction or air drag
@@ -333,34 +329,6 @@ class Player(pygame.sprite.Sprite):
         elif self.velocity.y < - settings.MAX_JUMP_VELOCITY:
             self.velocity.y = - settings.MAX_JUMP_VELOCITY
 
-
-
-    # NOT CURRENTLY SUPPORTING KEYBOARD CONTROLS
-    # def keyboard_controls(self):
-    #     # If airborne, player acceleratess at only 20% of normal value
-    #     if self.check_airborne():
-    #         acceleration = 0.2 * settings.PLAYER_ACCELERATION
-    #     else:
-    #         acceleration = settings.PLAYER_ACCELERATION
-    #
-    #     keys = pygame.key.get_pressed()
-    #     if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-    #         self.acceleration.x = -acceleration
-    #     if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-    #         self.acceleration.x = acceleration
-    #
-    # def keyboard_wall_grab(self):
-    #     keys = pygame.key.get_pressed()
-    #     if keys[pygame.K_RETURN] and self.check_wall():
-    #         if self.current_energy >= 1:
-    #             self.move(0, 0)
-    #             self.acceleration = pygame.math.Vector2(0, 0)
-    #             self.velocity = pygame.math.Vector2(0, 0)
-    #             self.current_energy -= 1
-    #             if self.current_energy < 0:
-    #                 self.current_energy = 0
-    #             return True
-    #     return False
 
 
 

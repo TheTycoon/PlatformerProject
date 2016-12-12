@@ -56,8 +56,6 @@ class Game:
 
         self.powerup_img = pygame.image.load(path.join(self.img_folder, 'metal_ball.png')).convert_alpha()
 
-
-
     def load_level(self, mapname):
         self.map = tilemap.Map(path.join(self.map_folder, mapname))    #testmap.tmx is current testing ground
         self.map_img = self.map.make_map()
@@ -120,6 +118,9 @@ class Game:
                     elif self.player.check_airborne() and self.player.can_double_jump and not self.player.double_jumping:
                         self.player.double_jump()
 
+                if event.type == pygame.JOYBUTTONUP:
+                    if event.button == settings.JOYBUTTONS['A']:
+                        self.player.jump_cut()
 
                 if event.button == settings.JOYBUTTONS['Y']:
                     for object in self.interactables:
@@ -128,33 +129,10 @@ class Game:
                                 self.next_level()
 
                 if event.button == settings.JOYBUTTONS['LeftBumper']:
-                    self.player.joystick_air_dash('left')
+                    self.player.joystick_teleport('left')
 
                 if event.button == settings.JOYBUTTONS['RightBumper']:
-                    self.player.joystick_air_dash('right')
-
-
-            if event.type == pygame.JOYBUTTONUP:
-                if event.button == settings.JOYBUTTONS['A']:
-                    self.player.jump_cut()
-
-
-
-
-
-            # # Keyboard input events below || NOT CURRENTLY SUPPORTING KEYBOARD
-            # if event.type == pygame.KEYDOWN:
-            #     if event.key == pygame.K_SPACE:
-            #         if not self.player.check_airborne():
-            #             self.player.jump()
-            #         if self.player.check_airborne() and self.player.can_double_jump and not self.player.double_jumping:
-            #             self.player.double_jump()
-            # if event.type == pygame.KEYUP:
-            #     if event.key == pygame.K_SPACE:
-            #         self.player.jump_cut()
-
-            # Joystick/controller events below
-
+                    self.player.joystick_teleport('right')
 
     def draw(self):
         # show FPS
@@ -220,7 +198,6 @@ class Game:
 
                 if event.type == pygame.JOYBUTTONDOWN:
                     waiting = False
-
 
 game = Game()
 game.new()
