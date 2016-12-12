@@ -24,6 +24,7 @@ class Player(pygame.sprite.Sprite):
         # movement flags
         self.double_jumping = False
         self.wall_grabbing = False
+        self.wall_jumping = False
         self.sprinting = False
         self.air_dashing = False
 
@@ -31,6 +32,10 @@ class Player(pygame.sprite.Sprite):
         self.max_energy = 20
         self.current_energy = 20
         self.energy_regen = settings.ENERGY_REGEN
+        self.cooling_down = False
+        self.cool_down = settings.ENERGY_COOLDOWN
+        self.last = pygame.time.get_ticks()
+
 
     def move(self, dx, dy):
         # Move each axis separately. Note that this checks for collisions both times.
@@ -75,6 +80,13 @@ class Player(pygame.sprite.Sprite):
                     block.kill()
                     print("You Gained Sprint!")
 
+    def landing_reset(self, velocity=0):
+        self.velocity.y = velocity
+        self.double_jumping = False
+        self.wall_jumping = False
+        self.air_dashing = False
+
+
     def wall_collide(self, block, dx, dy):
         if dx > 0:  # Moving right; Hit the left side of the wall
             self.rect.right = block.rect.left
@@ -88,9 +100,7 @@ class Player(pygame.sprite.Sprite):
         # - Resets the ability to air dash
         if dy > 0:
             self.rect.bottom = block.rect.top
-            self.double_jumping = False
-            self.air_dashing = False
-            self.velocity.y = 0
+            self.landing_reset()
 
         # Moving up; Hit the bottom side of the wall, lose velocity
         if dy < 0:
@@ -100,22 +110,21 @@ class Player(pygame.sprite.Sprite):
     def platform_collide(self, block, dy):
         # moving down when colliding
         if dy > 0:
-            self.velocity.y = 0
             self.rect.bottom = block.rect.top
-            self.double_jumping = False
-            self.air_dashing = False
+            self.landing_reset()
+
 
     def bounce_collide(self, block, dx, dy):
         if dy > 0:
 
             self.rect.bottom = block.rect.top
-            self.double_jumping = False
-            self.air_dashing = False
+
             if block.direction == 'up':
+                self.landing_reset(self.velocity.y)
                 self.velocity.y *= -1
                 self.velocity.y -= block.bounce
             else:
-                self.velocity.y = 0
+                self.landing_reset()
         if dy < 0:
             self.rect.top = block.rect.bottom
             if block.direction == 'down':
@@ -132,7 +141,6 @@ class Player(pygame.sprite.Sprite):
                 self.velocity.x *= -1
                 self.velocity.x += block.bounce
 
-
     def jump(self):
         # jump only if standing on a platform
         if not self.check_airborne():
@@ -142,6 +150,13 @@ class Player(pygame.sprite.Sprite):
         if self.check_airborne() and not self.double_jumping:
             self.double_jumping = True
             self.velocity.y = -settings.PLAYER_JUMP
+
+    def wall_jump(self):
+        self.wall_jumping = True
+        self.wall_grabbing = False
+        self.velocity.y = -3 * settings.PLAYER_JUMP
+
+
 
     def jump_cut(self):
         if self.check_airborne():
@@ -222,13 +237,25 @@ class Player(pygame.sprite.Sprite):
         if self.check_airborne():
             if self.can_wall_grab and self.joystick_wall_grab():
                 stop_movement = True
+            if self.wall_jumping:
+                stop_movement = False
 
         if not stop_movement:
             self.move(dx, dy)
 
     def begin_frame(self):
         # Regain the standard amount of energy per frame, set initial accelerations for new frame
-        self.regain_energy()
+        if self.current_energy == 0 and not self.cooling_down:
+            self.cooling_down = True
+
+        now = pygame.time.get_ticks()
+        if self.cooling_down and now - self.last >= self.cool_down:
+            self.last = now
+            self.cooling_down = False
+
+        if not self.cooling_down:
+            self.regain_energy()
+
         if self.check_airborne():
             self.acceleration = pygame.math.Vector2(0, settings.GRAVITY_MAGNITUDE)
         else:
@@ -267,7 +294,7 @@ class Player(pygame.sprite.Sprite):
         else:
             self.wall_grabbing = False
 
-        if self.wall_grabbing == True:
+        if self.wall_grabbing is True:
             if self.current_energy >= 1:
                 self.acceleration = pygame.math.Vector2(0, 0)
                 self.velocity = pygame.math.Vector2(0, 0)

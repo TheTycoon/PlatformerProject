@@ -14,8 +14,8 @@ PURPLE = (128,   0, 128)
 BROWN  = (165,  42,  42)
 
 # game settings
-WIDTH = 640
-HEIGHT = 640
+WIDTH = 1366
+HEIGHT = 768
 FPS = 60
 TITLE = 'Platformer Project'
 FONT = pygame.font.match_font('courier')
@@ -33,7 +33,8 @@ MAX_FALL_VELOCITY = 20                  #  20.0
 MAX_JUMP_VELOCITY = 100                 # 100.0
 PLAYER_JUMP = 20                        #  20.0
 ENERGY_REGEN = 0.5
-AIR_DASH_MAGNITUDE = 100
+ENERGY_COOLDOWN = 5000                  # time in milliseconds
+AIR_DASH_MAGNITUDE = 100                # number of pixels instantly traveled
 
 
 

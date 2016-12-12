@@ -31,7 +31,7 @@ class Game:
         self.interactables = pygame.sprite.Group()
         self.abilities = pygame.sprite.Group()
 
-        self.levels = ['testmap.tmx', 'level1.tmx', 'level2.tmx', 'level3.tmx', 'level4.tmx', 'level5.tmx',
+        self.levels = ['demo1.tmx', 'level1.tmx', 'level2.tmx', 'level3.tmx', 'level4.tmx', 'level5.tmx',
                        'level6.tmx']
         self.player = player.Player(self, 0, 0,)
 
@@ -113,10 +113,13 @@ class Game:
                 if event.button == settings.JOYBUTTONS['A']:
                     if self.joystick.get_axis(settings.JOYAXIS['LeftVertical']) > 0.85:
                         self.player.platform_drop()
+                    elif self.player.wall_grabbing and self.player.check_airborne() and self.player.current_energy > 0:
+                        self.player.wall_jump()
                     elif not self.player.check_airborne():
                         self.player.jump()
                     elif self.player.check_airborne() and self.player.can_double_jump and not self.player.double_jumping:
                         self.player.double_jump()
+
 
                 if event.button == settings.JOYBUTTONS['Y']:
                     for object in self.interactables:
