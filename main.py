@@ -31,7 +31,7 @@ class Game:
         self.interactables = pygame.sprite.Group()
         self.abilities = pygame.sprite.Group()
 
-        self.levels = ['demo1.tmx', 'level1.tmx', 'level2.tmx', 'level3.tmx', 'level4.tmx', 'level5.tmx',
+        self.levels = ['testmap.tmx', 'level1.tmx', 'level2.tmx', 'level3.tmx', 'level4.tmx', 'level5.tmx',
                        'level6.tmx']
         self.player = player.Player(self, 0, 0,)
 
@@ -53,6 +53,12 @@ class Game:
         self.game_folder = path.dirname(__file__)
         self.img_folder = path.join(self.game_folder, 'img')
         self.map_folder = path.join(self.game_folder, 'maps')
+
+        self.idle_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_idle.png"))
+        self.walk_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_walking.png"))
+        self.run_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_running.png"))
+        self.jump_start_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_jump_start.png"))
+        self.jump_loop_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_jump_loop.png"))
 
         self.powerup_img = pygame.image.load(path.join(self.img_folder, 'metal_ball.png')).convert_alpha()
 
@@ -142,6 +148,8 @@ class Game:
         self.screen.blit(self.map_img, self.camera.apply_rect(self.map_rect))
         for sprite in self.all_sprites:
             self.screen.blit(sprite.image, self.camera.apply(sprite))
+
+        self.screen.blit(self.player.collide_image, self.camera.apply_rect(self.player.hit_rect))
 
         for sprite in self.abilities:
             self.screen.blit(sprite.image, self.camera.apply(sprite))

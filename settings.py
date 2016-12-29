@@ -31,6 +31,7 @@ DRAG = 0.5                              #   0.5
 MAX_FALL_VELOCITY = 20                  #  20.0
 MAX_JUMP_VELOCITY = 100                 # 100.0
 PLAYER_JUMP = 20                        #  20.0
+STARTING_ENERGY = 40                    # still deciding this energy stuff
 ENERGY_REGEN = 1                        # Don't use decimals
 ENERGY_COOLDOWN = 3000                  # time in milliseconds
 TELEPORT_MAGNITUDE = 100                # number of pixels instantly traveled

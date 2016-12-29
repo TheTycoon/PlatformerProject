@@ -2,39 +2,126 @@ import pygame
 import settings
 
 
+class Spritesheet:
+    def __init__(self, filename):
+        self.spritesheet = pygame.image.load(filename).convert_alpha()
+
+    def get_image(self, x, y, width, height):
+        image = pygame.Surface((width, height))
+        image.blit(self.spritesheet, (0, 0), (x, y, width, height))
+        image = pygame.transform.scale(image, (width // 4, height // 4))
+        return image
+
+
 class Player(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
         self.groups = game.all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pygame.Surface((settings.PLAYER_WIDTH, settings.PLAYER_HEIGHT))
-        self.rect = self.image.get_rect()
-        self.image.fill(settings.BLUE, self.rect)
+        self.load_images()
+        self.image = self.standing_frames_right[0]
+        self.rect = pygame.Rect(0, 0, 32, 64)
         self.rect.topleft = (x, y)
+        self.collide_image = pygame.Surface((32, 64))
+        self.hit_rect = pygame.Rect(0, 0, 32, 64)
+        self.collide_image.fill(settings.WHITE, self.hit_rect)
+        self.collide_image.set_alpha(100)
         self.position = pygame.math.Vector2(x, y)
         self.velocity = pygame.math.Vector2(0, 0)
         self.acceleration = pygame.math.Vector2(0, 0)
 
+        # animation stuff
+        self.current_frame = 0
+        self.last_update = 0
+        self.facing_left = False
+        self.facing_right = False
+
         # ability flags
         self.can_double_jump = True
-        self.can_wall_grab = True
+        self.can_wall_grab = False
         self.can_sprint = True
-        self.can_teleport = True
+        self.can_teleport = False
 
         # movement flags
+        self.walking = False
+        self.jumping = False
         self.double_jumping = False
         self.wall_grabbing = False
         self.wall_jumping = False
         self.sprinting = False
         self.teleporting = False
 
-        # attributes of the player
-        self.max_energy = 20
-        self.current_energy = 20
+        # attributes of the player / Currently Just Energy Attributes
+        self.max_energy = settings.STARTING_ENERGY
+        self.current_energy = settings.STARTING_ENERGY
         self.energy_regen = settings.ENERGY_REGEN
+        self.energy_cooldown = settings.ENERGY_COOLDOWN
         self.cooling_down = False
-        self.cool_down = settings.ENERGY_COOLDOWN
         self.last = pygame.time.get_ticks()
+
+    def load_images(self):
+        self.standing_frames_right = []
+        for i in range(8):
+            self.standing_frames_right.append(self.game.idle_spritesheet.get_image(197 * i, 0, 197, 257))
+        self.standing_frames_left = []
+        for frame in self.standing_frames_right:
+            frame.set_colorkey(settings.BLACK)
+            self.standing_frames_left.append(pygame.transform.flip(frame, True, False))
+
+        self.walking_frames_right = []
+        for i in range(8):
+            self.walking_frames_right.append(self.game.walk_spritesheet.get_image(240 * i, 0, 240, 258))
+        self.walking_frames_left = []
+        for frame in self.walking_frames_right:
+            frame.set_colorkey(settings.BLACK)
+            self.walking_frames_left.append(pygame.transform.flip(frame, True, False))
+
+        self.running_frames_right = []
+        for i in range(8):
+            self.running_frames_right.append(self.game.run_spritesheet.get_image(313 * i, 0, 313, 260))
+        self.running_frames_left = []
+        for frame in self.running_frames_right:
+            frame.set_colorkey(settings.BLACK)
+            self.running_frames_left.append(pygame.transform.flip(frame, True, False))
+
+    def animate(self):
+        now = pygame.time.get_ticks()
+        if self.velocity.x > 0:
+            if self.sprinting:
+                if now - self.last_update > 150:
+                    self.last_update = now
+                    self.current_frame = (self.current_frame + 1) % len(self.running_frames_right)
+                    self.image = self.running_frames_right[self.current_frame]
+            else:
+                if now - self.last_update > 150:
+                    self.last_update = now
+                    self.current_frame = (self.current_frame + 1) % len(self.walking_frames_right)
+                    self.image = self.walking_frames_right[self.current_frame]
+        elif self.velocity.x < 0:
+            if self.sprinting:
+                if now - self.last_update > 150:
+                    self.last_update = now
+                    self.current_frame = (self.current_frame + 1) % len(self.running_frames_left)
+                    self.image = self.running_frames_left[self.current_frame]
+            else:
+                if now - self.last_update > 150:
+                    self.last_update = now
+                    self.current_frame = (self.current_frame + 1) % len(self.walking_frames_left)
+                    self.image = self.walking_frames_left[self.current_frame]
+        elif self.velocity.x == 0 and self.facing_right:
+            if now - self.last_update > 350:
+                self.last_update = now
+                self.current_frame = (self.current_frame + 1) % len(self.standing_frames_right)
+                self.image = self.standing_frames_right[self.current_frame]
+        elif self.velocity.x == 0 and self.facing_left:
+            if now - self.last_update > 350:
+                self.last_update = now
+                self.current_frame = (self.current_frame + 1) % len(self.standing_frames_left)
+                self.image = self.standing_frames_left[self.current_frame]
+
+
+
+        self.mask = pygame.mask.from_surface(self.image)
 
     def move(self, dx, dy):
         # Move each axis separately. Note that this checks for collisions both times.
@@ -86,22 +173,20 @@ class Player(pygame.sprite.Sprite):
         self.teleporting = False
 
     def wall_collide(self, block, dx, dy):
-        if dx > 0:  # Moving right; Hit the left side of the wall
+        if dx > 0:  # Moving right; Hit the left side of the wall, lose horizontal velocity
             self.rect.right = block.rect.left
+            self.velocity.x = 0
 
-        if dx < 0:  # Moving left; Hit the right side of the wall
+        if dx < 0:  # Moving left; Hit the right side of the wall, lose horizontal velocity
             self.rect.left = block.rect.right
+            self.velocity.x = 0
 
-        # Moving down; Hit the top side of the wall
-        # Extra Behaviors:
-        # - Resets the ability to double jump
-        # - Resets the ability to air dash
-        if dy > 0:
+        if dy > 0:  # Moving down; Hit the top side of the wall, reset abilities and vertical velocity
             self.rect.bottom = block.rect.top
             self.landing_reset()
 
-        # Moving up; Hit the bottom side of the wall, lose velocity
-        if dy < 0:
+
+        if dy < 0:  # Moving up; Hit the bottom side of the wall, lose velocity
             self.rect.top = block.rect.bottom
             self.velocity.y = 0
 
@@ -113,9 +198,7 @@ class Player(pygame.sprite.Sprite):
 
     def bounce_collide(self, block, dx, dy):
         if dy > 0:
-
             self.rect.bottom = block.rect.top
-
             if block.direction == 'up':
                 self.landing_reset(self.velocity.y)
                 self.velocity.y *= -1
@@ -215,6 +298,7 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         self.begin_frame()
+        self.animate()
         self.joystick_movement()
         if self.can_sprint and not self.check_airborne():
             self.joystick_sprint()
@@ -237,13 +321,16 @@ class Player(pygame.sprite.Sprite):
             self.move(dx, dy)
 
     def begin_frame(self):
+        self.hit_rect.x = self.rect.x
+        self.hit_rect.y = self.rect.y
+
         # Regain the standard amount of energy per frame if not on cooldown, set initial accelerations for new frame
         if self.current_energy <= 0 and not self.cooling_down:
             self.cooling_down = True
             self.last = pygame.time.get_ticks()
 
         now = pygame.time.get_ticks()
-        if self.cooling_down and now - self.last >= self.cool_down:
+        if self.cooling_down and now - self.last >= self.energy_cooldown:
             self.last = now
             self.cooling_down = False
 
@@ -254,6 +341,9 @@ class Player(pygame.sprite.Sprite):
             self.acceleration = pygame.math.Vector2(0, settings.GRAVITY_MAGNITUDE)
         else:
             self.acceleration = pygame.math.Vector2(0, 0)
+
+        if self.game.joystick.get_axis(settings.JOYAXIS['Trigger']) > -0.85 or self.current_energy < 2:
+            self.sprinting = False
 
     def regain_energy(self):
         self.current_energy += self.energy_regen
@@ -269,8 +359,12 @@ class Player(pygame.sprite.Sprite):
 
         if self.game.joystick.get_axis(settings.JOYAXIS['LeftHorizontal']) < -0.85:
             self.acceleration.x = - acceleration
+            self.facing_left = True
+            self.facing_right = False
         if self.game.joystick.get_axis(settings.JOYAXIS['LeftHorizontal']) > 0.85:
             self.acceleration.x = acceleration
+            self.facing_right = True
+            self.facing_left = False
 
     def joystick_sprint(self):
         if self.current_energy >= 2:
@@ -279,6 +373,7 @@ class Player(pygame.sprite.Sprite):
                 if self.current_energy <= 0:
                     self.current_energy = 0
                 self.acceleration.x *= 3
+                self.sprinting = True
                 return True
         return False
 
