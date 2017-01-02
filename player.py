@@ -19,6 +19,11 @@ class Player(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.load_images()
+        self.position = pygame.math.Vector2(x, y)
+        self.velocity = pygame.math.Vector2(0, 0)
+        self.acceleration = pygame.math.Vector2(0, 0)
+
+        # rect stuff
         self.image = self.standing_frames_right[0]
         self.rect = pygame.Rect(0, 0, 32, 64)
         self.rect.topleft = (x, y)
@@ -26,9 +31,6 @@ class Player(pygame.sprite.Sprite):
         self.hit_rect = pygame.Rect(0, 0, 32, 64)
         self.collide_image.fill(settings.WHITE, self.hit_rect)
         self.collide_image.set_alpha(100)
-        self.position = pygame.math.Vector2(x, y)
-        self.velocity = pygame.math.Vector2(0, 0)
-        self.acceleration = pygame.math.Vector2(0, 0)
 
         # animation stuff
         self.current_frame = 0
@@ -88,23 +90,23 @@ class Player(pygame.sprite.Sprite):
         now = pygame.time.get_ticks()
         if self.velocity.x > 0:
             if self.sprinting:
-                if now - self.last_update > 150:
+                if now - self.last_update > 50:
                     self.last_update = now
                     self.current_frame = (self.current_frame + 1) % len(self.running_frames_right)
                     self.image = self.running_frames_right[self.current_frame]
             else:
-                if now - self.last_update > 150:
+                if now - self.last_update > 100:
                     self.last_update = now
                     self.current_frame = (self.current_frame + 1) % len(self.walking_frames_right)
                     self.image = self.walking_frames_right[self.current_frame]
         elif self.velocity.x < 0:
             if self.sprinting:
-                if now - self.last_update > 150:
+                if now - self.last_update > 50:
                     self.last_update = now
                     self.current_frame = (self.current_frame + 1) % len(self.running_frames_left)
                     self.image = self.running_frames_left[self.current_frame]
             else:
-                if now - self.last_update > 150:
+                if now - self.last_update > 100:
                     self.last_update = now
                     self.current_frame = (self.current_frame + 1) % len(self.walking_frames_left)
                     self.image = self.walking_frames_left[self.current_frame]
@@ -118,10 +120,6 @@ class Player(pygame.sprite.Sprite):
                 self.last_update = now
                 self.current_frame = (self.current_frame + 1) % len(self.standing_frames_left)
                 self.image = self.standing_frames_left[self.current_frame]
-
-
-
-        self.mask = pygame.mask.from_surface(self.image)
 
     def move(self, dx, dy):
         # Move each axis separately. Note that this checks for collisions both times.
@@ -321,8 +319,16 @@ class Player(pygame.sprite.Sprite):
             self.move(dx, dy)
 
     def begin_frame(self):
-        self.hit_rect.x = self.rect.x
         self.hit_rect.y = self.rect.y
+        if self.facing_right:
+            self.hit_rect.x = self.rect.x + 15
+            if self.sprinting:
+                self.hit_rect.x = self.rect.x + 45
+
+        else:
+            self.hit_rect.x = self.rect.x + 8
+
+
 
         # Regain the standard amount of energy per frame if not on cooldown, set initial accelerations for new frame
         if self.current_energy <= 0 and not self.cooling_down:
@@ -361,10 +367,12 @@ class Player(pygame.sprite.Sprite):
             self.acceleration.x = - acceleration
             self.facing_left = True
             self.facing_right = False
+            self.walking = True
         if self.game.joystick.get_axis(settings.JOYAXIS['LeftHorizontal']) > 0.85:
             self.acceleration.x = acceleration
             self.facing_right = True
             self.facing_left = False
+            self.walking = True
 
     def joystick_sprint(self):
         if self.current_energy >= 2:
