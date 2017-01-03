@@ -9,8 +9,9 @@ import tilemap
 class Game:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
+        self.screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT), pygame.FULLSCREEN)
         self.clock = pygame.time.Clock()
+        self.debug = True
 
         joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
         if joysticks:
@@ -31,11 +32,10 @@ class Game:
         self.interactables = pygame.sprite.Group()
         self.abilities = pygame.sprite.Group()
 
-        self.levels = ['testmap.tmx', 'level1.tmx', 'level2.tmx', 'level3.tmx', 'level4.tmx', 'level5.tmx',
-                       'level6.tmx']
+        self.levels = ['testmap.tmx', '1920test.tmx']
         self.player = player.Player(self, 0, 0,)
 
-        self.level_number = 0
+        self.level_number = 1
         self.load_level(self.levels[self.level_number])
 
     def run(self):
@@ -57,8 +57,10 @@ class Game:
         self.idle_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_idle.png"))
         self.walk_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_walking.png"))
         self.run_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_running.png"))
-        self.jump_start_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_jump_start.png"))
-        self.jump_loop_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_jump_loop.png"))
+        self.jump_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_jumping.png"))
+        self.double_jump_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_double_jumping.png"))
+        self.wall_slide_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_wall_slide.png"))
+        self.sword_attack_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_attack.png"))
 
         self.powerup_img = pygame.image.load(path.join(self.img_folder, 'metal_ball.png')).convert_alpha()
 
@@ -73,8 +75,8 @@ class Game:
             if tile_object.type == 'Player':
                 self.player.position.x = tile_object.x
                 self.player.position.y = tile_object.y
-                self.player.rect.x = tile_object.x
-                self.player.rect.y = tile_object.y
+                self.player.hit_rect.x = tile_object.x
+                self.player.hit_rect.y = tile_object.y
             if tile_object.type == 'Block':
                 if tile_object.name == 'bounce':
                     direction = tile_object.Direction
@@ -112,8 +114,19 @@ class Game:
                     self.playing = False
                 self.running = False
 
+            if event.type == pygame.KEYDOWN:
+
+                if event.key == pygame.K_ESCAPE:
+                    if self.playing:
+                        self.playing = False
+                    self.running = False
+
+                if event.key == pygame.K_TAB:
+                    self.show_debug()
+
             if event.type == pygame.JOYBUTTONDOWN:
 
+                # this might need to be cleaned up a bit
                 if event.button == settings.JOYBUTTONS['A']:
                     if self.joystick.get_axis(settings.JOYAXIS['LeftVertical']) > 0.85:
                         self.player.platform_drop()
@@ -124,9 +137,9 @@ class Game:
                     elif self.player.check_airborne() and self.player.can_double_jump and not self.player.double_jumping:
                         self.player.double_jump()
 
-                if event.type == pygame.JOYBUTTONUP:
-                    if event.button == settings.JOYBUTTONS['A']:
-                        self.player.jump_cut()
+                if event.button == settings.JOYBUTTONS['X']:
+                    if self.player.sword_attacking is False:
+                        self.player.sword_attack()
 
                 if event.button == settings.JOYBUTTONS['Y']:
                     for object in self.interactables:
@@ -135,10 +148,16 @@ class Game:
                                 self.next_level()
 
                 if event.button == settings.JOYBUTTONS['LeftBumper']:
-                    self.player.joystick_teleport('left')
+                    if self.player.can_teleport:
+                        self.player.joystick_teleport('left')
 
                 if event.button == settings.JOYBUTTONS['RightBumper']:
-                    self.player.joystick_teleport('right')
+                    if self.player.can_teleport:
+                        self.player.joystick_teleport('right')
+
+            if event.type == pygame.JOYBUTTONUP:
+                if event.button == settings.JOYBUTTONS['A']:
+                    self.player.jump_cut()
 
     def draw(self):
         # show FPS
@@ -149,12 +168,15 @@ class Game:
         for sprite in self.all_sprites:
             self.screen.blit(sprite.image, self.camera.apply(sprite))
 
-        self.screen.blit(self.player.collide_image, self.camera.apply_rect(self.player.hit_rect))
-
         for sprite in self.abilities:
             self.screen.blit(sprite.image, self.camera.apply(sprite))
 
         self.draw_bar(5, 5, self.player.current_energy / self.player.max_energy)
+
+        # everything you want to see when debugging / Toggle with TAB
+        if self.debug:
+            self.draw_debug()
+
 
         # display frame
         pygame.display.flip()
@@ -206,6 +228,14 @@ class Game:
 
                 if event.type == pygame.JOYBUTTONDOWN:
                     waiting = False
+
+    def show_debug(self):
+        self.debug = not self.debug
+
+    def draw_debug(self):
+        self.screen.blit(self.player.hit_image, self.camera.apply_rect(self.player.hit_rect))
+
+
 
 game = Game()
 game.new()

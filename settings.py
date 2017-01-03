@@ -1,4 +1,5 @@
 import pygame
+pygame.init()
 
 # define colors
 WHITE  = (255, 255, 255)
@@ -13,8 +14,9 @@ PURPLE = (128,   0, 128)
 BROWN  = (165,  42,  42)
 
 # game settings
-WIDTH = 1366
-HEIGHT = 768
+screen_resolution = pygame.display.Info()
+WIDTH = screen_resolution.current_w
+HEIGHT = screen_resolution.current_h
 FPS = 60
 TITLE = 'Platformer Project'
 FONT = pygame.font.match_font('courier')
@@ -31,8 +33,8 @@ DRAG = 0.5                              #   0.5
 MAX_FALL_VELOCITY = 20                  #  20.0
 MAX_JUMP_VELOCITY = 100                 # 100.0
 PLAYER_JUMP = 20                        #  20.0
-STARTING_ENERGY = 400                   # still deciding this energy stuff
-ENERGY_REGEN = 10                       # Don't use decimals
+STARTING_ENERGY = 40                    # still deciding this energy stuff
+ENERGY_REGEN = 10                        # Don't use decimals
 ENERGY_COOLDOWN = 3000                  # time in milliseconds
 TELEPORT_MAGNITUDE = 100                # number of pixels instantly traveled
 
