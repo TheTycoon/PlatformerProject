@@ -1,5 +1,6 @@
 import pygame
 import settings
+import sprites
 
 
 class Spritesheet:
@@ -52,6 +53,8 @@ class Player(pygame.sprite.Sprite):
         self.teleporting = False
 
         self.sword_attacking = False
+        self.thrust_attacking = False
+        self.ranged_attacking = False
 
         # attributes of the player / Currently Just Energy Attributes
         self.max_energy = settings.STARTING_ENERGY
@@ -118,35 +121,83 @@ class Player(pygame.sprite.Sprite):
             frame.set_colorkey(settings.BLACK)
             self.sword_attack_frames_left.append(pygame.transform.flip(frame, True, False))
 
+        self.thrust_attack_frames_right = []
+        for i in range(8):
+            self.thrust_attack_frames_right.append(self.game.sword_thrust_spritesheet.get_image(536 * i, 0, 536, 265))
+        self.thrust_attack_frames_left = []
+        for frame in self.thrust_attack_frames_right:
+            frame.set_colorkey(settings.BLACK)
+            self.thrust_attack_frames_left.append(pygame.transform.flip(frame, True, False))
+
+        self.ranged_attack_frames_right = []
+        for i in range(8):
+            self.ranged_attack_frames_right.append(self.game.ranged_attack_spritesheet.get_image(279 * i, 0, 279, 276))
+        self.ranged_attack_frames_left = []
+        for frame in self.ranged_attack_frames_right:
+            frame.set_colorkey(settings.BLACK)
+            self.ranged_attack_frames_left.append(pygame.transform.flip(frame, True, False))
+
+        self.bullet_frames = []
+        for i in range(8):
+            self.bullet_frames.append(self.game.red_bullet_spritesheet.get_image(60 * i, 0, 60, 61))
+        # for frame in self.bullet_frames:
+        #     frame.set_colorkey(settings.BLACK)
+
+        self.teleporting_frames = []
+        for i in range(8):
+            self.teleporting_frames.append(self.game.teleport_spritesheet.get_image(185 * i, 0, 185, 198))
+        for frame in self.teleporting_frames:
+            frame.set_colorkey(settings.BLACK)
+
     def animate(self):
         now = pygame.time.get_ticks()
-
-
 
         if self.sword_attacking:
             if now - self.last_update > 50:
                 self.last_update = now
                 if self.facing_right:
-                    self.current_frame = self.current_frame + 1
                     self.image = self.sword_attack_frames_right[self.current_frame]
-                else:
                     self.current_frame = self.current_frame + 1
+                else:
                     self.image = self.sword_attack_frames_left[self.current_frame]
-            if self.current_frame == len(self.sword_attack_frames_right) - 1:
-                self.sword_attacking = False
+                    self.current_frame = self.current_frame + 1
 
 
+        if self.thrust_attacking:
+            if now - self.last_update > 50:
+                self.last_update = now
+                if self.facing_right:
+                    self.image = self.thrust_attack_frames_right[self.current_frame]
+                    self.current_frame += 1
+                else:
+                    self.image = self.thrust_attack_frames_left[self.current_frame]
+                    self.current_frame += 1
+            if self.current_frame == len(self.thrust_attack_frames_right):
+                self.thrust_attacking = False
+                self.current_frame = 4
 
 
+        if self.ranged_attacking:
+            if now - self.last_update > 20:
+                self.last_update = now
+                if self.facing_right:
+                    self.image = self.ranged_attack_frames_right[self.current_frame]
+                    self.current_frame += 1
+                else:
+                    self.image = self.ranged_attack_frames_left[self.current_frame]
+                    self.current_frame += 1
+            if self.current_frame == len(self.ranged_attack_frames_right):
+                self.ranged_attacking = False
+                self.current_frame = 0
 
 
-        elif not self.check_airborne():
+        if not self.check_airborne():
             if self.velocity.x > 0:
                 if self.sprinting:
                     if now - self.last_update > 50:
                         self.last_update = now
-                        self.current_frame = (self.current_frame + 1) % len(self.running_frames_right)
                         self.image = self.running_frames_right[self.current_frame]
+                        self.current_frame = (self.current_frame + 1) % len(self.running_frames_right)
                 else:
                     if now - self.last_update > 100:
                         self.last_update = now
@@ -177,10 +228,10 @@ class Player(pygame.sprite.Sprite):
         elif self.wall_grabbing:
             if now - self.last_update > 100:
                 self.last_update = now
-                if self.facing_right:
+                if self.check_wall('right'):
                     self.current_frame = (self.current_frame + 1) % len(self.wall_slide_frames_left)
                     self.image = self.wall_slide_frames_left[self.current_frame]
-                else:
+                elif self.check_wall('left'):
                     self.current_frame = (self.current_frame + 1) % len(self.wall_slide_frames_right)
                     self.image = self.wall_slide_frames_right[self.current_frame]
 
@@ -205,25 +256,34 @@ class Player(pygame.sprite.Sprite):
                     self.current_frame = (self.current_frame + 1) % len(self.jumping_frames_left)
                     self.image = self.jumping_frames_left[self.current_frame]
 
+        else:
+            if now - self.last_update > 100:
+                self.current_frame = 0
+                if self.facing_right:
+                    self.image = self.standing_frames_right[self.current_frame]
+                else:
+                    self.image = self.standing_frames_left[self.current_frame]
+
+
+
     # this is pretty ugly, but I don't know of a better way to go about fixing the animations
     def animation_offset(self):
-        if self.facing_right:
+        if self.wall_grabbing:
+            self.rect.y = self.hit_rect.y
+            if self.check_wall('right'):
+                self.rect.x = self.hit_rect.x - 20
+            elif self.check_wall('left'):
+                self.rect.x = self.hit_rect.x - 5
+
+        if self.facing_right and not self.wall_grabbing and not self.thrust_attacking:
             self.rect.x = self.hit_rect.x - 12
             self.rect.y = self.hit_rect.y
             if self.jumping:
                 self.rect.y = self.hit_rect.y - 20
             if self.double_jumping:
                 self.rect.x = self.hit_rect.x - 24
-                self.rect.y = self.hit_rect.y - 10
-            if self.wall_grabbing:
-                self.rect.x = self.hit_rect.x - 20
-            if self.sword_attacking:
-                self.rect.x = self.hit_rect.x - 52
-                self.rect.y = self.hit_rect.y - 24
-
-
-
-        else:
+                self.rect.y = self.hit_rect.y - 5
+        elif not self.facing_right and not self.wall_grabbing and not self.thrust_attacking:
             self.rect.x = self.hit_rect.x - 12
             self.rect.y = self.hit_rect.y
             if not self.check_wall('left'):
@@ -233,14 +293,17 @@ class Player(pygame.sprite.Sprite):
                     self.rect.x = self.hit_rect.x - 42
             if self.jumping:
                 self.rect.x = self.hit_rect.x - 20
-                self.rect.y = self.hit_rect.y - 20
+                self.rect.y = self.hit_rect.y - 5
             if self.double_jumping:
                 self.rect.y = self.hit_rect.y - 10
-            if self.wall_grabbing:
-                self.rect.x = self.hit_rect.x - 5
-            if self.sword_attacking:
-                self.rect.x = self.hit_rect.x - 52
-                self.rect.y = self.hit_rect.y - 24
+
+        if self.thrust_attacking:
+            self.rect.x = self.hit_rect.x -50
+
+
+        if self.facing_right and self.sword_attacking:
+            self.rect.x = self.hit_rect.x - 45
+            self.rect.y = self.hit_rect.y - 25
 
     def move(self, dx, dy):
         # Move each axis separately. Note that this checks for collisions both times.
@@ -259,7 +322,7 @@ class Player(pygame.sprite.Sprite):
             if self.hit_rect.colliderect(block.rect):
                 if block.death is True:
                     self.game.restart_level()
-                if block.name == 'wall':
+                if block.name == 'wall' or block.name == 'ice':
                     self.wall_collide(block, dx, dy)
                 elif block.name == 'platform':
                     self.platform_collide(block, dy)
@@ -363,10 +426,10 @@ class Player(pygame.sprite.Sprite):
         self.wall_jumping = True
         self.wall_grabbing = False
         if self.facing_right:
-            self.velocity.x = - settings.PLAYER_JUMP
+            self.velocity.x = -1 * settings.PLAYER_JUMP
         else:
             self.velocity.x = settings.PLAYER_JUMP
-        self.velocity.y = -2 * settings.PLAYER_JUMP
+        self.velocity.y = -2 * settings.PLAYER_JUMP - settings.GRAVITY_MAGNITUDE
 
     def jump_cut(self):
         if self.check_airborne():
@@ -440,8 +503,11 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         self.regain_energy()
-        self.animation_offset()
         self.animate()
+        self.animation_offset()
+        if self.current_frame == len(self.sword_attack_frames_right) and self.sword_attacking:
+            self.sword_attacking = False
+            self.current_frame = 0
 
         self.begin_frame()
         self.joystick_movement()
@@ -457,8 +523,8 @@ class Player(pygame.sprite.Sprite):
         # Final movement - Check All Abilities That Can Stop Regular Movement
         stop_movement = False
 
-        # if self.sword_attacking:
-        #     stop_movement = True
+        if self.ranged_attacking and not self.check_airborne():
+            dx = 0
 
         if self.check_airborne():
             if self.can_wall_grab and self.joystick_wall_grab():
@@ -522,9 +588,11 @@ class Player(pygame.sprite.Sprite):
                 self.walking = True
 
     def joystick_sprint(self):
-        if self.current_energy >= 2:
-            if self.game.joystick.get_axis(settings.JOYAXIS['Trigger']) < -0.85:
-                self.current_energy -= 2
+        if self.current_energy >= 5:
+            if self.game.joystick.get_axis(settings.JOYAXIS['Trigger']) < -0.85 and \
+                    (self.game.joystick.get_axis(settings.JOYAXIS['LeftHorizontal']) > 0.85 or \
+                     self.game.joystick.get_axis(settings.JOYAXIS['LeftHorizontal']) < -0.85):
+                self.current_energy -= 5
                 if self.current_energy <= 0:
                     self.current_energy = 0
                 self.acceleration.x *= 3
@@ -541,10 +609,10 @@ class Player(pygame.sprite.Sprite):
             self.wall_grabbing = False
 
         if self.wall_grabbing is True:
-            if self.current_energy >= 2:
+            if self.current_energy >= 5:
                 self.acceleration = pygame.math.Vector2(0, 0)
                 self.velocity = pygame.math.Vector2(0, 0)
-                self.current_energy -= 2
+                self.current_energy -= 5
                 self.move(0, 0)
                 self.double_jumping = False
                 return True
@@ -560,11 +628,32 @@ class Player(pygame.sprite.Sprite):
         if self.current_energy >= self.max_energy / 2:
             self.current_energy = 0
             self.teleporting = True
+            teleport_animation = sprites.SingleAnimation(self.rect.center, self.teleporting_frames, 10)
+            self.game.all_sprites.add(teleport_animation)
             self.move(teleport, 0)
 
     def sword_attack(self):
         self.current_frame = 0
         self.sword_attacking = True
+
+    def thrust_attack(self):
+        self.current_frame = 0
+        self.thrust_attacking = True
+
+    def ranged_attack(self):
+        if self.current_energy >= 20:
+            self.current_energy -= 20
+            self.current_frame = 0
+            self.ranged_attacking = True
+            direction = None
+            if self.facing_right:
+                direction = 'right'
+            else:
+                direction= 'left'
+            bullet = sprites.Bullet(self.game, self.bullet_frames, 100, self.hit_rect.center, direction)
+            self.game.all_sprites.add(bullet)
+            self.game.bullets.add(bullet)
+
 
 
     def apply_resistance(self):

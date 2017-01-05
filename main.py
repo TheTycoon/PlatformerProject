@@ -11,7 +11,7 @@ class Game:
         pygame.init()
         self.screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT), pygame.FULLSCREEN)
         self.clock = pygame.time.Clock()
-        self.debug = True
+        self.debug = False
 
         joysticks = [pygame.joystick.Joystick(x) for x in range(pygame.joystick.get_count())]
         if joysticks:
@@ -31,11 +31,12 @@ class Game:
         self.platforms = pygame.sprite.Group()
         self.interactables = pygame.sprite.Group()
         self.abilities = pygame.sprite.Group()
+        self.bullets = pygame.sprite.Group()
 
         self.levels = ['testmap.tmx', '1920test.tmx']
         self.player = player.Player(self, 0, 0,)
 
-        self.level_number = 1
+        self.level_number = 0
         self.load_level(self.levels[self.level_number])
 
     def run(self):
@@ -61,8 +62,10 @@ class Game:
         self.double_jump_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_double_jumping.png"))
         self.wall_slide_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_wall_slide.png"))
         self.sword_attack_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_attack.png"))
-
-        self.powerup_img = pygame.image.load(path.join(self.img_folder, 'metal_ball.png')).convert_alpha()
+        self.sword_thrust_spritesheet = player.Spritesheet(path.join(self.img_folder, "sword_thrust.png"))
+        self.teleport_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_teleport.png"))
+        self.ranged_attack_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_ranged_attack.png"))
+        self.red_bullet_spritesheet = player.Spritesheet(path.join(self.img_folder, "red_ball_bullet.png"))
 
     def load_level(self, mapname):
         self.map = tilemap.Map(path.join(self.map_folder, mapname))    #testmap.tmx is current testing ground
@@ -92,12 +95,14 @@ class Game:
     def next_level(self):
         self.interactables.empty()
         self.blocks.empty()
+        self.bullets.empty()
         self.level_number += 1
         self.load_level(self.levels[self.level_number])
 
     def restart_level(self):
         self.interactables.empty()
         self.blocks.empty()
+        self.bullets.empty()
         self.load_level(self.levels[self.level_number])
 
     def update(self):
@@ -137,9 +142,13 @@ class Game:
                     elif self.player.check_airborne() and self.player.can_double_jump and not self.player.double_jumping:
                         self.player.double_jump()
 
+                if event.button == settings.JOYBUTTONS['B']:
+                    if self.player.ranged_attacking is False:
+                        self.player.ranged_attack()
+
                 if event.button == settings.JOYBUTTONS['X']:
                     if self.player.sword_attacking is False:
-                        self.player.sword_attack()
+                        self.player.thrust_attack()
 
                 if event.button == settings.JOYBUTTONS['Y']:
                     for object in self.interactables:
@@ -168,8 +177,8 @@ class Game:
         for sprite in self.all_sprites:
             self.screen.blit(sprite.image, self.camera.apply(sprite))
 
-        for sprite in self.abilities:
-            self.screen.blit(sprite.image, self.camera.apply(sprite))
+
+
 
         self.draw_bar(5, 5, self.player.current_energy / self.player.max_energy)
 
