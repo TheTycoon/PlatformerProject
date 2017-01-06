@@ -123,7 +123,7 @@ class Player(pygame.sprite.Sprite):
 
         self.thrust_attack_frames_right = []
         for i in range(8):
-            self.thrust_attack_frames_right.append(self.game.sword_thrust_spritesheet.get_image(536 * i, 0, 536, 265))
+            self.thrust_attack_frames_right.append(self.game.sword_thrust_spritesheet.get_image(358 * i, 0, 358, 265))
         self.thrust_attack_frames_left = []
         for frame in self.thrust_attack_frames_right:
             frame.set_colorkey(settings.BLACK)
@@ -297,13 +297,12 @@ class Player(pygame.sprite.Sprite):
             if self.double_jumping:
                 self.rect.y = self.hit_rect.y - 10
 
-        if self.thrust_attacking:
-            self.rect.x = self.hit_rect.x -50
+        if self.thrust_attacking and self.facing_right and self.current_frame != 7:
+            self.rect.x = self.hit_rect.x - 25
+        elif self.thrust_attacking and not self.facing_right:
+            self.rect.x = self.hit_rect.x - 40
 
 
-        if self.facing_right and self.sword_attacking:
-            self.rect.x = self.hit_rect.x - 45
-            self.rect.y = self.hit_rect.y - 25
 
     def move(self, dx, dy):
         # Move each axis separately. Note that this checks for collisions both times.

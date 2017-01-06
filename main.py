@@ -62,7 +62,7 @@ class Game:
         self.double_jump_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_double_jumping.png"))
         self.wall_slide_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_wall_slide.png"))
         self.sword_attack_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_attack.png"))
-        self.sword_thrust_spritesheet = player.Spritesheet(path.join(self.img_folder, "sword_thrust.png"))
+        self.sword_thrust_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_thrust.png"))
         self.teleport_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_teleport.png"))
         self.ranged_attack_spritesheet = player.Spritesheet(path.join(self.img_folder, "player_ranged_attack.png"))
         self.red_bullet_spritesheet = player.Spritesheet(path.join(self.img_folder, "red_ball_bullet.png"))
