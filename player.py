@@ -3,6 +3,7 @@ import settings
 import sprites
 
 
+# this should probably be moved out of this file
 class Spritesheet:
     def __init__(self, filename):
         self.spritesheet = pygame.image.load(filename).convert_alpha()
@@ -16,7 +17,7 @@ class Spritesheet:
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
-        self.groups = game.all_sprites
+        self.groups = game.player_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.game = game
         self.load_images()
@@ -162,7 +163,6 @@ class Player(pygame.sprite.Sprite):
                     self.image = self.sword_attack_frames_left[self.current_frame]
                     self.current_frame = self.current_frame + 1
 
-
         if self.thrust_attacking:
             if now - self.last_update > 50:
                 self.last_update = now
@@ -176,7 +176,6 @@ class Player(pygame.sprite.Sprite):
                 self.thrust_attacking = False
                 self.current_frame = 4
 
-
         if self.ranged_attacking:
             if now - self.last_update > 20:
                 self.last_update = now
@@ -189,7 +188,6 @@ class Player(pygame.sprite.Sprite):
             if self.current_frame == len(self.ranged_attack_frames_right):
                 self.ranged_attacking = False
                 self.current_frame = 0
-
 
         if not self.check_airborne():
             if self.velocity.x > 0:
@@ -235,7 +233,6 @@ class Player(pygame.sprite.Sprite):
                     self.current_frame = (self.current_frame + 1) % len(self.wall_slide_frames_right)
                     self.image = self.wall_slide_frames_right[self.current_frame]
 
-
         elif self.double_jumping:
             if now - self.last_update > 25:
                 self.last_update = now
@@ -263,8 +260,6 @@ class Player(pygame.sprite.Sprite):
                     self.image = self.standing_frames_right[self.current_frame]
                 else:
                     self.image = self.standing_frames_left[self.current_frame]
-
-
 
     # this is pretty ugly, but I don't know of a better way to go about fixing the animations
     def animation_offset(self):
@@ -301,8 +296,6 @@ class Player(pygame.sprite.Sprite):
             self.rect.x = self.hit_rect.x - 25
         elif self.thrust_attacking and not self.facing_right:
             self.rect.x = self.hit_rect.x - 40
-
-
 
     def move(self, dx, dy):
         # Move each axis separately. Note that this checks for collisions both times.
@@ -371,7 +364,6 @@ class Player(pygame.sprite.Sprite):
         if dy > 0:  # Moving down; Hit the top side of the wall, reset abilities and vertical velocity
             self.hit_rect.bottom = block.rect.top
             self.landing_reset()
-
 
         if dy < 0:  # Moving up; Hit the bottom side of the wall, lose velocity
             self.hit_rect.top = block.rect.bottom
@@ -547,8 +539,6 @@ class Player(pygame.sprite.Sprite):
         else:
             self.acceleration = pygame.math.Vector2(0, 0)
 
-
-
     def regain_energy(self):
         # Regain the standard amount of energy per frame if not on cooldown, set initial accelerations for new frame
         if self.current_energy <= 0 and not self.cooling_down:
@@ -573,7 +563,6 @@ class Player(pygame.sprite.Sprite):
         else:
             acceleration = settings.PLAYER_ACCELERATION
             airborne = False
-
 
         if self.game.joystick.get_axis(settings.JOYAXIS['LeftHorizontal']) < -0.85:
             self.acceleration.x = - acceleration
@@ -649,11 +638,9 @@ class Player(pygame.sprite.Sprite):
                 direction = 'right'
             else:
                 direction= 'left'
-            bullet = sprites.Bullet(self.game, self.bullet_frames, 100, self.hit_rect.center, direction)
+            bullet = sprites.Bullet(self.game, self.hit_rect.center, direction)
             self.game.all_sprites.add(bullet)
             self.game.bullets.add(bullet)
-
-
 
     def apply_resistance(self):
         # Apply resistance depending on block friction or air drag

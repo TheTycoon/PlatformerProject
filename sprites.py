@@ -3,7 +3,6 @@ import settings
 
 
 # find a better way to add these single kinds of animations like this and the bullet one which are basically the same
-# way too much repeated code
 class SingleAnimation(pygame.sprite.Sprite):
     def __init__(self, center, spritesheet, frame_rate):
         pygame.sprite.Sprite.__init__(self)
@@ -30,39 +29,24 @@ class SingleAnimation(pygame.sprite.Sprite):
 
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, game, spritesheet, frame_rate, center, direction):
+    def __init__(self, game, center, direction):
         pygame.sprite.Sprite.__init__(self, )
         self.game = game
-        self.spritesheet = spritesheet
-        self.image = spritesheet[0]
+        self.image = game.yellow_bullet_img
         self.rect = self.image.get_rect()
         self.rect.center = center
-        self.frame = 0
-        self.last_update = pygame.time.get_ticks()
-        self.frame_rate = frame_rate
         self.direction = direction
 
     def update(self):
         # Move bullet and collisions
         if self.direction == 'right':
-            self.rect.x += 30
+            self.rect.x += 20
         else:
-            self.rect.x -= 30
+            self.rect.x -= 20
 
         for block in self.game.blocks:
             if self.rect.colliderect(block.rect):
                 self.kill()
-
-        # Animation of Bullet
-        now = pygame.time.get_ticks()
-        if now - self.last_update > self.frame_rate:
-            self.last_update = now
-            self.frame = (self.frame + 1) % len(self.spritesheet)
-            center = self.rect.center
-            self.image = self.spritesheet[self.frame]
-
-
-
 
 
 class Block(pygame.sprite.Sprite):
@@ -87,24 +71,25 @@ class Block(pygame.sprite.Sprite):
 
 
 class Interactable(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, w, h, name):
+    def __init__(self, game, x, y, w, h, name, img_on, img_off):
         self.groups = game.interactables
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        self.rect = pygame.Rect(x, y, w, h)
-        self.x = x
-        self.y = y
         self.name = name
-
-
-class Ability(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, w, h, name):
-        self.groups = game.abilities
-        pygame.sprite.Sprite.__init__(self, self.groups)
-        self.image = game.powerup_img
+        self.image = img_off
+        self.image_on = img_on
+        self.image_off = img_off
+        self.state = False
         self.rect = pygame.Rect(x, y, w, h)
-        self.name = name
 
+    def update(self):
+        if self.state is False:
+            self.image = self.image_off
+        else:
+            self.image = self.image_on
+
+    def handle_event(self):
+        pass
 
 # BLOCK TYPES
 # Will convert death blocks to doing damage once the health system is in place
