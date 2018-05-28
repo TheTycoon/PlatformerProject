@@ -34,7 +34,7 @@ class Game:
         self.abilities = pygame.sprite.Group()
         self.bullets = pygame.sprite.Group()
 
-        self.levels = ['testmap.tmx', '1920test.tmx']
+        self.levels = ['Map1.tmx', 'testmap.tmx', '1920test.tmx']
         self.player = player.Player(self, 0, 0, )
 
         self.level_number = 0

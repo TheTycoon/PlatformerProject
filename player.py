@@ -39,10 +39,10 @@ class Player(pygame.sprite.Sprite):
         self.facing_right = True
 
         # ability flags
-        self.can_double_jump = True
-        self.can_wall_grab = True
-        self.can_sprint = True
-        self.can_teleport = True
+        self.can_double_jump = False
+        self.can_wall_grab = False
+        self.can_sprint = False
+        self.can_teleport = False
 
         # movement flags
         self.walking = False
