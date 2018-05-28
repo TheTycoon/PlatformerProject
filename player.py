@@ -324,22 +324,6 @@ class Player(pygame.sprite.Sprite):
         self.position.x = self.hit_rect.x
         self.position.y = self.hit_rect.y
 
-        # this is currently placeholder for gaining abilities
-        for block in self.game.abilities:
-            if self.hit_rect.colliderect(block.rect):
-                if block.name == 'double_jump':
-                    self.can_double_jump = True
-                    block.kill()
-                    print("You Gained Double Jump!")
-                if block.name == 'wall_grab':
-                    self.can_wall_grab = True
-                    block.kill()
-                    print("You Gained Wall Grab!")
-                if block.name == 'sprint':
-                    self.can_sprint = True
-                    block.kill()
-                    print("You Gained Sprint!")
-
     def landing_reset(self):
         if self.facing_right:
             self.image = self.standing_frames_right[0]

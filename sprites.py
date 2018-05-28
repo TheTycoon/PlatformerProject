@@ -71,7 +71,7 @@ class Block(pygame.sprite.Sprite):
 
 
 class Interactable(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, w, h, name, img_on, img_off):
+    def __init__(self, game, x, y, w, h, name, img_on, img_off, ability):
         self.groups = game.interactables
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.game = game
@@ -81,6 +81,7 @@ class Interactable(pygame.sprite.Sprite):
         self.image_off = img_off
         self.state = False
         self.rect = pygame.Rect(x, y, w, h)
+        self.ability = ability
 
     def update(self):
         if self.state is False:
@@ -94,6 +95,7 @@ class Interactable(pygame.sprite.Sprite):
 # BLOCK TYPES
 # Will convert death blocks to doing damage once the health system is in place
 # Some blocks will drain health over time, others will cause instant death
+# the block names here are used as objects in Tiled
 BLOCKS = {}
 BLOCKS['wall'] = {'friction': settings.WALL_FRICTION,
                   'bounce': 0,

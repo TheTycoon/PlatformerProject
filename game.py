@@ -93,8 +93,13 @@ class Game:
                 sprites.Block(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height,
                               tile_object.name, direction)
             if tile_object.type == 'Interactable':
+                if tile_object.name == 'button':
+                    ability = tile_object.Ability
+                else:
+                    ability = None
+
                 sprites.Interactable(self, tile_object.x, tile_object.y, tile_object.width, tile_object.height,
-                                     tile_object.name, self.button_down_img, self.button_up_img)
+                                     tile_object.name, self.button_down_img, self.button_up_img, ability)
 
         self.camera = tilemap.Camera(self.map.width, self.map.height)
 
@@ -160,11 +165,13 @@ class Game:
 
                 if event.button == settings.JOYBUTTONS['Y']:
                     for object in self.interactables:
-                        if object.name == 'exit':
-                            if self.player.rect.colliderect(object.rect):
+                        if object.name == 'exit' and self.player.rect.colliderect(object.rect):
                                 self.next_level()
                         if object.name == 'button' and self.player.rect.colliderect(object.rect):
                             object.state = not object.state
+                        if object.name == 'button' and object.ability == 'Double Jump':
+                            self.player.can_double_jump = True
+                            self.draw_text('You Gained Double Jump!', 18, settings.WHITE, 150, 100, True)
 
                 if event.button == settings.JOYBUTTONS['LeftBumper']:
                     if self.player.can_teleport:
