@@ -34,7 +34,7 @@ class Game:
         self.abilities = pygame.sprite.Group()
         self.bullets = pygame.sprite.Group()
 
-        self.levels = ['Map1.tmx', 'testmap.tmx', '1920test.tmx']
+        self.levels = ['Map1.tmx', 'Map2.tmx', 'testmap.tmx']
         self.player = player.Player(self, 0, 0, )
 
         self.level_number = 0
@@ -160,8 +160,10 @@ class Game:
                         self.player.ranged_attack()
 
                 if event.button == settings.JOYBUTTONS['X']:
-                    if self.player.sword_attacking is False:
-                        self.player.thrust_attack()
+                    pass
+                    # turned off melee attack until animation is better
+                    #if self.player.sword_attacking is False:
+                        #self.player.thrust_attack()
 
                 if event.button == settings.JOYBUTTONS['Y']:
                     for object in self.interactables:
@@ -169,9 +171,12 @@ class Game:
                                 self.next_level()
                         if object.name == 'button' and self.player.rect.colliderect(object.rect):
                             object.state = not object.state
-                        if object.name == 'button' and object.ability == 'Double Jump':
-                            self.player.can_double_jump = True
-                            self.draw_text('You Gained Double Jump!', 18, settings.WHITE, 150, 100, True)
+                            if object.ability == 'Double Jump':
+                                self.player.can_double_jump = True
+                                self.draw_text('You Gained Double Jump!', 18, settings.WHITE, 150, 100, True)
+                            if object.ability == 'Sprint':
+                                self.player.can_sprint = True
+                                self.draw_text('You Gained Sprint!', 18, settings.WHITE, 150, 150, True)
 
                 if event.button == settings.JOYBUTTONS['LeftBumper']:
                     if self.player.can_teleport:

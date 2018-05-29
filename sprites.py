@@ -117,10 +117,6 @@ BLOCKS['death'] = {'friction': 0,
                    'bounce': 0,
                    'death': True}
 
-BLOCKS['platform'] = {'friction': settings.WALL_FRICTION,
-                      'bounce': 0,
-                      'death': False}
-
 
 
 
